@@ -1,0 +1,25 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { CtaSection } from "@/components/home/CtaSection";
+import { FeaturedArticles } from "@/components/home/FeaturedArticles";
+import { FeaturedProducts } from "@/components/home/FeaturedProducts";
+import { HeroCarousel } from "@/components/home/HeroCarousel";
+import { RichTextRenderer } from "@/components/content/RichTextRenderer";
+import { getArticles, getGlobal, getHomePage, getProducts } from "@/lib/strapi/queries";
+import { createMetadata } from "@/lib/seo/metadata";
+import { isLocale, type Locale } from "@/lib/i18n/config";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return {};
+  const [home, global] = await Promise.all([getHomePage(locale), getGlobal(locale)]);
+  return createMetadata(home?.seo ?? global?.defaultSeo, { title: global?.siteName ?? (locale === "zh" ? "企业官网" : "Corporate website"), description: global?.siteDescription ?? undefined });
+}
+
+export default async function LocaleHome({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+  const [home, products, articles] = await Promise.all([getHomePage(locale), getProducts(locale, "filters[featured][$eq]=true&pagination[limit]=6"), getArticles(locale, "pagination[limit]=3")]);
+  const current = locale as Locale;
+  return <div>{home?.heroSlides?.length ? <HeroCarousel locale={current} slides={home.heroSlides} /> : <section className="bg-slate-950 px-4 py-28 text-center text-white"><h1 className="text-4xl font-semibold">{locale === "zh" ? "欢迎访问我们的网站" : "Welcome to our website"}</h1></section>}{home?.introTitle || home?.intro ? <section className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6"><h2 className="text-3xl font-semibold text-slate-950">{home.introTitle ?? (locale === "zh" ? "关于我们" : "About us")}</h2>{home.intro ? <p className="mt-4 text-lg leading-8 text-slate-600">{home.intro}</p> : null}</section> : null}<FeaturedProducts locale={current} products={home?.featuredProducts?.length ? home.featuredProducts : products} title={home?.featuredProductsTitle} /><FeaturedArticles locale={current} articles={home?.featuredArticles?.length ? home.featuredArticles : articles} title={home?.featuredArticlesTitle} />{home?.blocks?.length ? <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6"><RichTextRenderer blocks={home.blocks} /></section> : null}<CtaSection locale={current} cta={home?.cta} /></div>;
+}
