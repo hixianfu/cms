@@ -1,0 +1,3 @@
+import type { Media } from "@/types/content";
+import { resolveMediaUrl } from "@/lib/strapi/image";
+export function MediaGallery({ media, label = "Gallery" }: { media?: Media[] | null; label?: string }) { const items = (media ?? []).map((m) => ({ m, url: resolveMediaUrl(m) })).filter((x): x is { m: Media; url: string } => Boolean(x.url)); if (!items.length) return null; return <div className="grid grid-cols-2 gap-4 md:grid-cols-3" aria-label={label}>{items.map(({ m, url }, i) => <figure key={`${url}-${i}`} className="overflow-hidden rounded-lg bg-slate-100"><img src={url} alt={m.alternativeText ?? ""} loading={i === 0 ? "eager" : "lazy"} className="aspect-[4/3] w-full object-cover" /></figure>)}</div>; }
