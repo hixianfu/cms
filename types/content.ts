@@ -1,0 +1,11 @@
+export type Locale = "zh" | "en" | string;
+export type Media = { url: string; alternativeText?: string | null; width?: number; height?: number; mime?: string };
+export type Seo = { metaTitle?: string | null; metaDescription?: string | null; shareImage?: Media | null; canonicalUrl?: string | null };
+export type NavigationItem = { label: string; href: string; external?: boolean };
+export type Global = { siteName: string; siteDescription?: string | null; logo?: Media | null; logoAlt?: string | null; defaultSeo?: Seo | null; navigation?: NavigationItem[]; footerText?: string | null; footerLinks?: NavigationItem[]; socialLinks?: NavigationItem[] };
+export type HeroSlide = { title: string; description?: string | null; image?: Media | null; href?: string | null; ctaLabel?: string | null };
+export type Product = { id: number | string; name: string; slug: string; summary?: string | null; cover?: Media | null; gallery?: Media[]; specifications?: Array<{ label: string; value: string }>; documents?: Array<{ name: string; file?: Media | null }>; category?: { name: string; slug: string } | null; sortOrder?: number; featured?: boolean; blocks?: unknown[]; seo?: Seo | null };
+export type Article = { id: number | string; title: string; slug: string; description?: string | null; cover?: Media | null; publishedAt?: string | null; author?: { name: string } | null; category?: { name: string; slug: string } | null; blocks?: unknown[]; seo?: Seo | null };
+export type HomePage = { heroSlides?: HeroSlide[]; blocks?: unknown[]; featuredProducts?: Product[]; featuredArticles?: Article[]; seo?: Seo | null };
+export type About = { title: string; cover?: Media | null; blocks?: unknown[]; seo?: Seo | null };
+export type ContactPage = { title?: string; address?: string; phone?: string; email?: string; mapUrl?: string; officeHours?: string; formIntro?: string; seo?: Seo | null };
