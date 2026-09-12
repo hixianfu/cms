@@ -40,10 +40,11 @@ export async function getHomePage(locale?: Locale) { const r = await strapiFetch
 export async function getProducts(locale?: Locale, query = "") { const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, query ? `&${query.replace(/^\?/, "")}` : "")}&sort=sortOrder:asc,createdAt:desc`, { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 export async function getProductCategories(locale?: Locale) {
   const options = { next: { revalidate: 300, tags: [cacheTags.products(tagLocale(locale))] } };
-  const r = await strapiFetch<Response<ProductCategory>>(`/api/product-categories${collectionParams(locale)}&sort=sortOrder:asc,name:asc`, options);
+  const categoryPopulate = `?populate[children]=true&${locale ? `filters[contentLocale][$eq]=${encodeURIComponent(locale)}&` : ""}sort=sortOrder:asc,name:asc`;
+  const r = await strapiFetch<Response<ProductCategory>>(`/api/product-categories${categoryPopulate}`, options);
   const localized = Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : [];
   if (localized.length || !locale) return localized;
-  const fallback = await strapiFetch<Response<ProductCategory>>(`/api/product-categories?populate=*&sort=sortOrder:asc,name:asc`, options);
+  const fallback = await strapiFetch<Response<ProductCategory>>(`/api/product-categories?populate[children]=true&sort=sortOrder:asc,name:asc`, options);
   return Array.isArray(fallback.data) ? fallback.data.map((x) => unwrap(x)) : [];
 }
 export async function getProductBySlug(slug: string, locale?: Locale) { const q = `&filters[slug][$eq]=${encodeURIComponent(slug)}`; const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, q)}`, { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale)), cacheTags.product(tagLocale(locale), slug)] } }); const item = Array.isArray(r.data) ? r.data[0] : r.data; return item ? unwrap(item) : null; }
