@@ -31,7 +31,7 @@ const params = (locale?: Locale, extra = "") => `?populate=*${locale ? `&locale=
 const collectionParams = (locale?: Locale, extra = "") => `?populate=*${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}${extra}`;
 
 const tagLocale = (locale?: Locale) => locale ?? "zh";
-export async function getGlobal(locale?: Locale) { const r = await strapiFetch<Response<Global>>(`/api/global${params(locale)}`, { next: { revalidate: 300, tags: [cacheTags.global(tagLocale(locale))] } }); return r.data ? mapNavigation(unwrap(r.data as Entity<Global>)) : null; }
+export async function getGlobal(locale?: Locale) { const query = `?populate[logo]=true&populate[favicon]=true&populate[defaultSeo][populate]=shareImage${locale ? `&locale=${encodeURIComponent(locale)}` : ""}`; const r = await strapiFetch<Response<Global>>(`/api/global${query}`, { next: { revalidate: 60, tags: [cacheTags.global(tagLocale(locale))] } }); return r.data ? mapNavigation(unwrap(r.data as Entity<Global>)) : null; }
 // Strapi does not recursively populate media nested inside repeatable
 // components with `populate=*`. Explicitly populate the hero slide image
 // (and other homepage media) so the carousel receives a usable URL.
