@@ -1,6 +1,7 @@
 import { strapiFetch } from "./client";
 import { cacheTags } from "./revalidate";
 import type { About, Article, ContactPage, Global, HomePage, Locale, Product, ProductCategory } from "@/types/content";
+import { topLevelCategories } from "./category-utils";
 
 type Entity<T> = { id?: number | string; documentId?: string; attributes?: T } & T;
 type Response<T> = { data: Entity<T> | Entity<T>[] | null };
@@ -40,12 +41,12 @@ export async function getHomePage(locale?: Locale) { const r = await strapiFetch
 export async function getProducts(locale?: Locale, query = "") { const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, query ? `&${query.replace(/^\?/, "")}` : "")}&sort=sortOrder:asc,createdAt:desc`, { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 export async function getProductCategories(locale?: Locale) {
   const options = { next: { revalidate: 300, tags: [cacheTags.products(tagLocale(locale))] } };
-  const categoryPopulate = `?populate[children]=true&${locale ? `filters[contentLocale][$eq]=${encodeURIComponent(locale)}&` : ""}sort=sortOrder:asc,name:asc`;
+  const categoryPopulate = `?populate[children]=true&filters[parent][$null]=true&${locale ? `filters[contentLocale][$eq]=${encodeURIComponent(locale)}&` : ""}sort=sortOrder:asc,name:asc`;
   const r = await strapiFetch<Response<ProductCategory>>(`/api/product-categories${categoryPopulate}`, options);
-  const localized = Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : [];
+  const localized = Array.isArray(r.data) ? topLevelCategories(r.data.map((x) => unwrap(x))) : [];
   if (localized.length || !locale) return localized;
-  const fallback = await strapiFetch<Response<ProductCategory>>(`/api/product-categories?populate[children]=true&sort=sortOrder:asc,name:asc`, options);
-  return Array.isArray(fallback.data) ? fallback.data.map((x) => unwrap(x)) : [];
+  const fallback = await strapiFetch<Response<ProductCategory>>(`/api/product-categories?populate[children]=true&filters[parent][$null]=true&sort=sortOrder:asc,name:asc`, options);
+  return Array.isArray(fallback.data) ? topLevelCategories(fallback.data.map((x) => unwrap(x))) : [];
 }
 export async function getProductBySlug(slug: string, locale?: Locale) { const q = `&filters[slug][$eq]=${encodeURIComponent(slug)}`; const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, q)}`, { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale)), cacheTags.product(tagLocale(locale), slug)] } }); const item = Array.isArray(r.data) ? r.data[0] : r.data; return item ? unwrap(item) : null; }
 export async function getRelatedProducts(categorySlug?: string, locale?: Locale, excludeSlug?: string) { const q = categorySlug ? `&filters[category][slug][$eq]=${encodeURIComponent(categorySlug)}${excludeSlug ? `&filters[slug][$ne]=${encodeURIComponent(excludeSlug)}` : ""}` : ""; const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, q)}&pagination[pageSize]=8&sort=sortOrder:asc`, { next: { revalidate: 120, tags: [cacheTags.products(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
