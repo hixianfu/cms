@@ -36,7 +36,7 @@ export async function getGlobal(locale?: Locale) { const query = `?populate[logo
 // Strapi does not recursively populate media nested inside repeatable
 // components with `populate=*`. Explicitly populate the hero slide image
 // (and other homepage media) so the carousel receives a usable URL.
-const homePageParams = (locale?: Locale) => `?populate[heroSlides][populate]=image&populate[cta][populate]=image&populate[seo][populate]=shareImage${locale ? `&locale=${encodeURIComponent(locale)}` : ""}`;
+const homePageParams = (locale?: Locale) => `?populate[heroSlides][populate]=image&populate[cta][populate]=image&populate[featuredProducts][populate]=*&populate[featuredArticles][populate]=*&populate[featuredSolutions][populate]=*&populate[featuredScenarios][populate]=*&populate[featuredCases][populate]=*&populate[featuredVideos][populate]=*&populate[featuredFaqs][populate]=*&populate[seo][populate]=shareImage${locale ? `&locale=${encodeURIComponent(locale)}` : ""}`;
 export async function getHomePage(locale?: Locale) { const r = await strapiFetch<Response<HomePage>>(`/api/home-page${homePageParams(locale)}`, { next: { revalidate: 120, tags: [cacheTags.homePage(tagLocale(locale))] } }); return r.data ? unwrap(r.data as Entity<HomePage>) : null; }
 export async function getProducts(locale?: Locale, query = "") { const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, query ? `&${query.replace(/^\?/, "")}` : "")}&sort=sortOrder:asc,createdAt:desc`, { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 export async function getProductCategories(locale?: Locale) {
