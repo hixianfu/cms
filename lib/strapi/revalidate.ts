@@ -9,4 +9,6 @@ export const cacheTags = {
   article: (locale: string, slug: string) => `article:${locale}:${slug}`,
   cases: (locale: string) => `cases:${locale}`,
   caseStudy: (locale: string, slug: string) => `case-study:${locale}:${slug}`,
+  videos: (locale: string) => `videos:${locale}`,
+  video: (locale: string, slug: string) => `video:${locale}:${slug}`,
 } as const;
