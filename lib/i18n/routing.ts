@@ -1,5 +1,5 @@
 import { defaultLocale, isLocale, type Locale } from "./config";
-export function localizedHref(locale: Locale, href: string) {
+export function localizedHref(locale: Locale | string, href: string) {
   if (/^https?:\/\//.test(href)) return href;
   const path = href.startsWith("/") ? href : `/${href}`;
   if (path === "/" || path === `/${locale}`) return `/${locale}`;

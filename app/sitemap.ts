@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getArticles, getProducts } from "@/lib/strapi/queries";
+import { getArticles, getCaseStudies, getProducts } from "@/lib/strapi/queries";
 import { locales, type Locale } from "@/lib/i18n/config";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
@@ -11,12 +11,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/${locale}/contact` },
     { url: `${siteUrl}/${locale}/products` },
     { url: `${siteUrl}/${locale}/blog` },
+    { url: `${siteUrl}/${locale}/cases` },
   ]);
 
   for (const locale of locales as readonly Locale[]) {
-    const [products, articles] = await Promise.all([getProducts(locale), getArticles(locale)]);
+    const [products, articles, cases] = await Promise.all([getProducts(locale), getArticles(locale), getCaseStudies(locale)]);
     entries.push(...products.filter((item) => item.slug).map((item) => ({ url: `${siteUrl}/${locale}/products/${item.slug}` })));
     entries.push(...articles.filter((item) => item.slug).map((item) => ({ url: `${siteUrl}/${locale}/blog/${item.slug}` })));
+    entries.push(...cases.filter((item) => item.slug).map((item) => ({ url: `${siteUrl}/${locale}/cases/${item.slug}` })));
   }
   return entries;
 }
