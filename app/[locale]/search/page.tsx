@@ -1,0 +1,33 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowUpRight, Search } from "lucide-react";
+import { notFound } from "next/navigation";
+import { getArticles, getCaseStudies, getFaqs, getProducts, getScenarios, getSolutions, getVideos, getGlobal } from "@/lib/strapi/queries";
+import { isLocale } from "@/lib/i18n/config";
+import { localizedHref } from "@/lib/i18n/routing";
+import type { Locale } from "@/types/content";
+import { createMetadata } from "@/lib/seo/metadata";
+
+type SearchParams = { q?: string; type?: string };
+type Group = { key: string; label: string; path: string; items: Array<{ id: number | string; slug: string; title?: string; name?: string; question?: string; summary?: string | null; description?: string | null }> };
+const labels = (zh: boolean) => ({ products: zh ? "产品" : "Products", solutions: zh ? "解决方案" : "Solutions", scenarios: zh ? "应用场景" : "Scenarios", cases: zh ? "客户案例" : "Case studies", videos: zh ? "视频" : "Videos", articles: zh ? "博客" : "Articles", faqs: "FAQ" });
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> { const { locale } = await params; if (!isLocale(locale)) return {}; const global = await getGlobal(locale); return createMetadata(null, { title: locale === "zh" ? "全站搜索" : "Site search", description: global?.siteDescription ?? undefined }); }
+export default async function SearchPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<SearchParams> }) {
+  const { locale } = await params; if (!isLocale(locale)) notFound(); const currentLocale = locale as Locale; const { q, type } = await searchParams; const term = q?.trim() ?? ""; const zh = locale === "zh"; const names = labels(zh);
+  let groups: Group[] = [];
+  if (term) {
+    const value = encodeURIComponent(term);
+    const [products, solutions, scenarios, cases, videos, articles, faqs] = await Promise.all([
+      getProducts(currentLocale, `filters[$or][0][name][$containsi]=${value}&filters[$or][1][summary][$containsi]=${value}`),
+      getSolutions(currentLocale, `filters[$or][0][title][$containsi]=${value}&filters[$or][1][summary][$containsi]=${value}&filters[$or][2][industry][$containsi]=${value}`),
+      getScenarios(currentLocale, `filters[$or][0][title][$containsi]=${value}&filters[$or][1][summary][$containsi]=${value}&filters[$or][2][industry][$containsi]=${value}`),
+      getCaseStudies(currentLocale, `filters[$or][0][title][$containsi]=${value}&filters[$or][1][summary][$containsi]=${value}&filters[$or][2][industry][$containsi]=${value}`),
+      getVideos(currentLocale, `filters[$or][0][title][$containsi]=${value}&filters[$or][1][description][$containsi]=${value}`),
+      getArticles(currentLocale, `filters[$or][0][title][$containsi]=${value}&filters[$or][1][description][$containsi]=${value}`),
+      getFaqs(currentLocale, `filters[$or][0][question][$containsi]=${value}&filters[$or][1][answer][$containsi]=${value}`),
+    ]);
+    groups = [{ key: "products", label: names.products, path: "products", items: products }, { key: "solutions", label: names.solutions, path: "solutions", items: solutions }, { key: "scenarios", label: names.scenarios, path: "scenarios", items: scenarios }, { key: "cases", label: names.cases, path: "cases", items: cases }, { key: "videos", label: names.videos, path: "videos", items: videos }, { key: "articles", label: names.articles, path: "blog", items: articles }, { key: "faqs", label: names.faqs, path: "faq", items: faqs }].filter((group) => !type || group.key === type).filter((group) => group.items.length);
+  }
+  const total = groups.reduce((sum, group) => sum + group.items.length, 0);
+  return <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8"><header className="relative overflow-hidden rounded-3xl bg-brand-ink px-6 py-14 text-white sm:px-10"><p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-lime">{zh ? "全站搜索" : "Site search"}</p><h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">{zh ? "找到你需要的包装信息" : "Find the packaging information you need"}</h1><form method="get" className="mt-8 flex max-w-3xl flex-col gap-3 sm:flex-row"><label htmlFor="site-search" className="sr-only">{zh ? "搜索关键词" : "Search keywords"}</label><div className="flex min-w-0 flex-1 items-center gap-3 rounded-lg bg-white px-4 text-brand-ink"><Search size={18} className="shrink-0 text-brand-teal" /><input id="site-search" name="q" defaultValue={term} placeholder={zh ? "搜索产品、方案、案例、视频、博客或 FAQ" : "Search products, solutions, cases, videos, articles, or FAQs"} className="min-w-0 flex-1 bg-transparent py-3 outline-none" /></div><button type="submit" className="brand-button-accent"><Search size={16} />{zh ? "搜索" : "Search"}</button></form></header><div className="mt-10">{term ? <div className="mb-7 flex flex-wrap items-center gap-2"><span className="text-sm text-brand-muted">{zh ? `“${term}”的搜索结果` : `Results for “${term}”`}</span>{[{ key: "", label: zh ? "全部" : "All" }, ...Object.entries(names).map(([key, label]) => ({ key, label }))].map((item) => <Link key={item.key} href={localizedHref(currentLocale, `/search?q=${encodeURIComponent(term)}${item.key ? `&type=${item.key}` : ""}`)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${type === item.key || (!type && !item.key) ? "bg-brand-blue text-white" : "bg-brand-teal/10 text-brand-blue"}`}>{item.label}</Link>)}</div> : null}{total ? <div className="space-y-10">{groups.map((group) => <section key={group.key}><div className="mb-4 flex items-end justify-between"><h2 className="text-2xl font-semibold text-brand-ink">{group.label}</h2><span className="text-sm text-brand-muted">{group.items.length}</span></div><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{group.items.map((item) => <Link key={item.id} href={localizedHref(currentLocale, `/${group.path}/${item.slug}`)} className="brand-card group p-5"><div className="flex items-start justify-between gap-4"><h3 className="font-semibold text-brand-ink">{item.title ?? item.name ?? item.question}</h3><ArrowUpRight size={16} className="shrink-0 text-brand-teal transition group-hover:translate-x-1 group-hover:-translate-y-1" /></div>{item.summary || item.description ? <p className="mt-3 line-clamp-3 text-sm leading-6 text-brand-muted">{item.summary ?? item.description}</p> : null}</Link>)}</div></section>)}</div> : <div className="brand-panel p-12 text-center"><p className="text-brand-muted">{term ? (zh ? "没有找到匹配的内容。" : "No matching content found.") : (zh ? "输入关键词开始搜索。" : "Enter a keyword to search.")}</p></div>}</div></section>;
+}
