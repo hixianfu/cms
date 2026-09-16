@@ -12,7 +12,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = { title: "Corporate Website", description: "Corporate website" };
+export const metadata: Metadata = {
+  title: "Corporate Website",
+  description: "Corporate website",
+  icons: { icon: "/default-favicon.ico" },
+};
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

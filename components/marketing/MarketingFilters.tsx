@@ -1,0 +1,9 @@
+import Link from "next/link";
+import { Search, X } from "lucide-react";
+import { localizedHref } from "@/lib/i18n/routing";
+import type { Locale } from "@/types/content";
+
+export function MarketingFilters({ locale, path, q, industry, industries }: { locale: Locale; path: "solutions" | "scenarios"; q?: string; industry?: string; industries: string[] }) {
+  const solution = path === "solutions";
+  return <form method="get" className="brand-panel mb-8 grid gap-4 p-4 md:grid-cols-[minmax(0,1.6fr)_minmax(12rem,1fr)_auto] md:items-end"><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? (solution ? "搜索解决方案" : "搜索应用场景") : (solution ? "Search solutions" : "Search scenarios")}<span className="mt-2 flex items-center gap-2 rounded-lg border border-brand-border px-3"><Search size={16} className="text-brand-teal" /><input name="q" defaultValue={q} placeholder={locale === "zh" ? "输入标题关键词" : "Search by title"} className="min-w-0 flex-1 bg-transparent py-2.5 outline-none" /></span></label><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? "行业" : "Industry"}<select name="industry" defaultValue={industry} className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2.5 font-normal"><option value="">{locale === "zh" ? "全部行业" : "All industries"}</option>{industries.map((value) => <option key={value} value={value}>{value}</option>)}</select></label><div className="flex gap-2"><button type="submit" className="brand-button-primary"><Search size={16} />{locale === "zh" ? "筛选" : "Filter"}</button>{q || industry ? <Link href={localizedHref(locale, `/${path}`)} className="brand-button border border-brand-border"><X size={16} />{locale === "zh" ? "清除" : "Clear"}</Link> : null}</div></form>;
+}
