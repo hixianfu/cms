@@ -18,4 +18,12 @@ describe("RichTextRenderer", () => {
     expect(screen.getByAltText("Two")).toBeInTheDocument();
     expect(screen.queryByText("Unsupported content block")).not.toBeInTheDocument();
   });
+
+  it("renders images embedded in markdown content", () => {
+    render(<RichTextRenderer blocks={[{
+      __component: "shared.rich-text",
+      body: "![Product detail](http://localhost:1337/uploads/product.jpg)",
+    }]} />);
+    expect(screen.getByAltText("Product detail")).toHaveAttribute("src", expect.stringContaining("/uploads/product.jpg"));
+  });
 });

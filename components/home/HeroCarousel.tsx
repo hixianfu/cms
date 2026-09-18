@@ -1,10 +1,134 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import useEmblaCarousel from "embla-carousel-react";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { HeroSlide } from "@/types/content";
 import type { Locale } from "@/lib/i18n/config";
 import { localizedHref } from "@/lib/i18n/routing";
 import { resolveMediaUrl } from "@/lib/strapi/image";
-export function HeroCarousel({ slides, locale }: { slides: HeroSlide[]; locale: Locale }) { const [index, setIndex] = useState(0); const [paused, setPaused] = useState(false); const count = slides.length; const zh = locale === "zh"; useEffect(() => { if (paused || count < 2) return; const timer = window.setInterval(() => setIndex((current) => (current + 1) % count), 6000); return () => window.clearInterval(timer); }, [count, paused]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if (event.key === "ArrowRight") setIndex((current) => (current + 1) % count); if (event.key === "ArrowLeft") setIndex((current) => (current - 1 + count) % count); }; if (count > 1) window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, [count]); if (!count) return null; const slide = slides[index]; const imageUrl = resolveMediaUrl(slide.image); const href = slide.linkUrl ?? slide.href; return <section className="relative overflow-hidden bg-brand-ink text-white" aria-roledescription="carousel" aria-label={zh ? "首页轮播图" : "Homepage carousel"} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(0,158,162,.35),transparent_35%)]" /><div className="relative mx-auto grid min-h-[34rem] max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:px-8"><div className="relative z-10 max-w-xl">{slide.eyebrow ? <p className="mb-5 text-sm font-bold uppercase tracking-[0.2em] text-brand-lime">{slide.eyebrow}</p> : null}<h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">{slide.title}</h1>{slide.description ? <p className="mt-6 text-lg leading-8 text-slate-200">{slide.description}</p> : null}{href && (slide.linkLabel ?? slide.ctaLabel) ? <Link href={href.startsWith("http") ? href : localizedHref(locale, href)} className="brand-button-accent mt-8 gap-2">{slide.linkLabel ?? slide.ctaLabel}<ArrowRight size={17} /></Link> : null}</div>{imageUrl ? <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/15 bg-slate-800 shadow-2xl"><Image src={imageUrl} alt={slide.imageAlt ?? slide.image?.alternativeText ?? ""} fill priority={index === 0} sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" /></div> : null}</div>{count > 1 ? <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-3"><button type="button" aria-label={zh ? "上一张" : "Previous slide"} onClick={() => setIndex((current) => (current - 1 + count) % count)} className="rounded-full border border-white/40 p-2 hover:bg-white/10"><ChevronLeft size={18} /></button><span className="min-w-12 text-center text-sm text-slate-300" aria-live="polite">{index + 1} / {count}</span><button type="button" aria-label={zh ? "下一张" : "Next slide"} onClick={() => setIndex((current) => (current + 1) % count)} className="rounded-full border border-white/40 p-2 hover:bg-white/10"><ChevronRight size={18} /></button><button type="button" aria-label={zh ? (paused ? "播放轮播图" : "暂停轮播图") : (paused ? "Play carousel" : "Pause carousel")} onClick={() => setPaused((value) => !value)} className="rounded-full border border-white/40 p-2 hover:bg-white/10">{paused ? <Play size={16} /> : <Pause size={16} />}</button></div> : null}</section>; }
+
+const AUTOPLAY_DELAY = 6000;
+
+export function HeroCarousel({ slides, locale }: { slides: HeroSlide[]; locale: Locale }) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: slides.length > 1 });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const count = slides.length;
+  const zh = locale === "zh";
+
+  const updateSelectedIndex = useCallback(() => {
+    if (emblaApi) setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on("select", updateSelectedIndex);
+    emblaApi.on("reInit", updateSelectedIndex);
+    return () => {
+      emblaApi.off("select", updateSelectedIndex);
+      emblaApi.off("reInit", updateSelectedIndex);
+    };
+  }, [emblaApi, updateSelectedIndex]);
+
+  useEffect(() => {
+    if (!emblaApi || !isPlaying || isHovered || count < 2) return;
+    const timer = window.setInterval(() => emblaApi.scrollNext(), AUTOPLAY_DELAY);
+    return () => window.clearInterval(timer);
+  }, [count, emblaApi, isHovered, isPlaying]);
+
+  if (!count) return null;
+
+  return (
+    <section
+      className="relative min-h-[calc(100svh-5rem)] overflow-hidden bg-brand-ink text-white"
+      aria-roledescription="carousel"
+      aria-label={zh ? "首页轮播图" : "Homepage carousel"}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowRight") emblaApi?.scrollNext();
+        if (event.key === "ArrowLeft") emblaApi?.scrollPrev();
+      }}
+    >
+      <div ref={emblaRef} className="min-h-[calc(100svh-5rem)] cursor-grab overflow-hidden active:cursor-grabbing">
+        <div className="flex min-h-[calc(100svh-5rem)] touch-pan-y">
+          {slides.map((slide, index) => {
+            const imageUrl = resolveMediaUrl(slide.image);
+            const href = slide.linkUrl ?? slide.href;
+            const ctaLabel = slide.linkLabel ?? slide.ctaLabel;
+
+            return (
+              <div
+                key={`${slide.title}-${index}`}
+                className="relative flex min-h-[calc(100svh-5rem)] min-w-0 flex-[0_0_100%] items-center"
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${index + 1} / ${count}`}
+                aria-hidden={selectedIndex !== index}
+              >
+                {imageUrl ? (
+                  <Image
+                    src={imageUrl}
+                    alt={slide.imageAlt ?? slide.image?.alternativeText ?? ""}
+                    fill
+                    priority={index === 0}
+                    sizes="100vw"
+                    className="object-cover"
+                  />
+                ) : null}
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,30,45,0.9)_0%,rgba(8,30,45,0.72)_45%,rgba(8,30,45,0.2)_78%,rgba(8,30,45,0.08)_100%)]" />
+                <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-28 pt-20 sm:px-8 lg:px-12">
+                  <div className="max-w-3xl">
+                    {slide.eyebrow ? <p className="mb-5 text-sm font-bold uppercase text-brand-lime">{slide.eyebrow}</p> : null}
+                    <h1 className="max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-7xl">{slide.title}</h1>
+                    {slide.description ? <p className="mt-6 max-w-2xl text-base leading-7 text-slate-100 sm:text-lg sm:leading-8">{slide.description}</p> : null}
+                    {href && ctaLabel ? (
+                      <Link href={href.startsWith("http") ? href : localizedHref(locale, href)} tabIndex={selectedIndex === index ? undefined : -1} className="brand-button-accent mt-8 gap-2">
+                        {ctaLabel}<ArrowRight size={17} />
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {count > 1 ? (
+        <div className="absolute inset-x-0 bottom-0 z-20">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 pb-7 sm:px-8 lg:px-12 lg:pb-10">
+            <div className="flex items-center gap-2" aria-label={zh ? "选择轮播图" : "Choose slide"}>
+              {slides.map((slide, index) => (
+                <button
+                  key={`${slide.title}-dot-${index}`}
+                  type="button"
+                  aria-label={zh ? `显示第 ${index + 1} 张` : `Show slide ${index + 1}`}
+                  aria-current={selectedIndex === index ? "true" : undefined}
+                  onClick={() => emblaApi?.scrollTo(index)}
+                  className={`h-1.5 rounded-full transition-all ${selectedIndex === index ? "w-9 bg-brand-lime" : "w-5 bg-white/45 hover:bg-white/75"}`}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="mr-2 min-w-12 text-center text-sm text-white/80" aria-live="polite">{selectedIndex + 1} / {count}</span>
+              <button type="button" aria-label={zh ? "上一张" : "Previous slide"} onClick={() => emblaApi?.scrollPrev()} className="rounded-full border border-white/50 bg-brand-ink/25 p-2.5 backdrop-blur transition hover:bg-white/15">
+                <ChevronLeft size={19} />
+              </button>
+              <button type="button" aria-label={zh ? "下一张" : "Next slide"} onClick={() => emblaApi?.scrollNext()} className="rounded-full border border-white/50 bg-brand-ink/25 p-2.5 backdrop-blur transition hover:bg-white/15">
+                <ChevronRight size={19} />
+              </button>
+              <button type="button" aria-label={zh ? (isPlaying ? "暂停轮播图" : "播放轮播图") : (isPlaying ? "Pause carousel" : "Play carousel")} onClick={() => setIsPlaying((value) => !value)} className="rounded-full border border-white/50 bg-brand-ink/25 p-2.5 backdrop-blur transition hover:bg-white/15">
+                {isPlaying ? <Pause size={17} /> : <Play size={17} />}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+}

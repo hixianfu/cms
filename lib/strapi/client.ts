@@ -24,11 +24,15 @@ export async function strapiFetch<T>(path: string, options: StrapiFetchOptions =
   if (process.env.STRAPI_API_TOKEN) headers.set("Authorization", `Bearer ${process.env.STRAPI_API_TOKEN}`);
 
   try {
+    const { next, ...requestOptions } = options;
+    const cacheOptions = process.env.NODE_ENV === "development"
+      ? { cache: "no-store" as const }
+      : { next: next ?? { revalidate: defaultRevalidate } };
     const response = await fetch(url, {
-      ...options,
+      ...requestOptions,
       headers,
       signal: options.signal ?? controller.signal,
-      next: options.next ?? { revalidate: defaultRevalidate },
+      ...cacheOptions,
     });
     const text = await response.text();
     let payload: unknown;

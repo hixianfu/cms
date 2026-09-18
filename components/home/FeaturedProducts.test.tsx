@@ -16,8 +16,8 @@ describe("FeaturedProducts", () => {
     expect(screen.queryByText("产品 7")).not.toBeInTheDocument();
   });
 
-  it("shows a localized empty state", () => {
-    render(<FeaturedProducts locale="zh" products={[]} />);
-    expect(screen.getByText("暂无推荐产品")).toBeInTheDocument();
+  it("does not render when there are no products", () => {
+    const { container } = render(<FeaturedProducts locale="zh" products={[]} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

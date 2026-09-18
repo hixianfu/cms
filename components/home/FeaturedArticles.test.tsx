@@ -15,8 +15,8 @@ describe("FeaturedArticles", () => {
     expect(screen.queryByText("Article 4")).not.toBeInTheDocument();
   });
 
-  it("shows a localized empty state", () => {
-    render(<FeaturedArticles locale="en" articles={[]} />);
-    expect(screen.getByText("No featured articles yet")).toBeInTheDocument();
+  it("does not render when there are no articles", () => {
+    const { container } = render(<FeaturedArticles locale="en" articles={[]} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

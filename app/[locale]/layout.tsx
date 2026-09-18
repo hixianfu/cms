@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getGlobal, getProductCategories } from "@/lib/strapi/queries";
+import { getGlobal, getHeaderMegaMenu, getProductCategories } from "@/lib/strapi/queries";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { resolveMediaUrl } from "@/lib/strapi/image";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -16,4 +16,4 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) { const { locale } = await params; if (!isLocale(locale)) notFound(); const [global, categories] = await Promise.all([getGlobal(locale), getProductCategories(locale)]); return <><SiteHeader locale={locale as Locale} global={global} categories={categories} /><main className="flex-1">{children}</main><SiteFooter locale={locale as Locale} global={global} categories={categories} /></>; }
+export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) { const { locale } = await params; if (!isLocale(locale)) notFound(); const current = locale as Locale; const [global, categories, megaMenu] = await Promise.all([getGlobal(current), getProductCategories(current), getHeaderMegaMenu(current)]); return <><SiteHeader locale={current} global={global} categories={categories} megaMenu={megaMenu} /><main className="flex-1">{children}</main><SiteFooter locale={current} global={global} categories={categories} /></>; }

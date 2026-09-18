@@ -14,7 +14,10 @@ export const cacheTags = {
   faqs: (locale: string) => `faqs:${locale}`,
   faq: (locale: string, slug: string) => `faq:${locale}:${slug}`,
   solutions: (locale: string) => `solutions:${locale}`,
+  solutionCategories: (locale: string) => `solution-categories:${locale}`,
   solution: (locale: string, slug: string) => `solution:${locale}:${slug}`,
   scenarios: (locale: string) => `scenarios:${locale}`,
+  scenarioCategories: (locale: string) => `scenario-categories:${locale}`,
   scenario: (locale: string, slug: string) => `scenario:${locale}:${slug}`,
+  caseCategories: (locale: string) => `case-categories:${locale}`,
 } as const;

@@ -27,8 +27,11 @@ export async function POST(request: Request) {
     else if (event.model === "about") revalidateTag(cacheTags.about(target), "max");
     else if (event.model === "contact-page") revalidateTag(cacheTags.contactPage(target), "max");
     else if (event.model === "solution" || event.model === "solutions") { revalidateTag(cacheTags.solutions(target), "max"); if (event.entry?.slug) revalidateTag(cacheTags.solution(target, event.entry.slug), "max"); }
+    else if (event.model === "solution-category") { revalidateTag(cacheTags.solutionCategories(target), "max"); revalidateTag(cacheTags.solutions(target), "max"); }
     else if (event.model === "scenario" || event.model === "scenarios") { revalidateTag(cacheTags.scenarios(target), "max"); if (event.entry?.slug) revalidateTag(cacheTags.scenario(target, event.entry.slug), "max"); }
+    else if (event.model === "scenario-category") { revalidateTag(cacheTags.scenarioCategories(target), "max"); revalidateTag(cacheTags.scenarios(target), "max"); }
     else if (event.model === "case-study" || event.model === "caseStudy" || event.model === "case_study") { revalidateTag(cacheTags.cases(target), "max"); if (event.entry?.slug) revalidateTag(cacheTags.caseStudy(target, event.entry.slug), "max"); }
+    else if (event.model === "case-category") { revalidateTag(cacheTags.caseCategories(target), "max"); revalidateTag(cacheTags.cases(target), "max"); }
     else if (event.model === "video" || event.model === "videos") { revalidateTag(cacheTags.videos(target), "max"); if (event.entry?.slug) revalidateTag(cacheTags.video(target, event.entry.slug), "max"); }
     else if (event.model === "faq" || event.model === "faqs") { revalidateTag(cacheTags.faqs(target), "max"); if (event.entry?.slug) revalidateTag(cacheTags.faq(target, event.entry.slug), "max"); }
   }
