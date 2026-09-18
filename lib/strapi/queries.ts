@@ -50,7 +50,9 @@ export async function getProductCategories(locale?: Locale) {
   return Array.isArray(fallback.data) ? topLevelCategories(fallback.data.map((x) => unwrap(x))) : [];
 }
 async function getHeaderContent(path: string, locale: Locale, tags: string[]) {
-  const query = `?fields[0]=title&fields[1]=slug&fields[2]=industry&populate[category][fields][0]=name&populate[category][fields][1]=slug&filters[contentLocale][$eq]=${encodeURIComponent(locale)}&pagination[pageSize]=100&sort=sortOrder:asc,title:asc`;
+  const fields = path === "articles" ? "fields[0]=title&fields[1]=slug" : "fields[0]=title&fields[1]=slug&fields[2]=industry";
+  const sort = path === "articles" ? "title:asc" : "sortOrder:asc,title:asc";
+  const query = `?${fields}&populate[category][fields][0]=name&populate[category][fields][1]=slug&filters[contentLocale][$eq]=${encodeURIComponent(locale)}&pagination[pageSize]=100&sort=${sort}`;
   const r = await strapiFetch<Response<HeaderContentItem>>(`/api/${path}${query}`, { next: { revalidate: 300, tags } });
   return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : [];
 }
