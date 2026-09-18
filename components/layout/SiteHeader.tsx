@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronDown, Menu, Search } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Global, HeaderMegaMenuData, NavigationItem, ProductCategory } from "@/types/content";
 import type { Locale } from "@/lib/i18n/config";
 import { localizedHref } from "@/lib/i18n/routing";
@@ -21,6 +21,10 @@ type Props = {
 
 export function SiteHeader({ locale, global, categories = [], megaMenu }: Props) {
   const [open, setOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleClose = () => { if (closeTimer.current) clearTimeout(closeTimer.current); closeTimer.current = setTimeout(() => setOpenMenu(null), 180); };
+  const cancelClose = () => { if (closeTimer.current) clearTimeout(closeTimer.current); };
   const fallback = [
     { label: messages[locale].home, href: "/" },
     { label: messages[locale].about, href: "/about" },
@@ -50,11 +54,11 @@ export function SiteHeader({ locale, global, categories = [], megaMenu }: Props)
         {items.map((item, index) => {
           const menu = menuFor(item.href);
           if (!menu) return <Link key={`${item.href}-${index}`} className="flex items-center border-b-2 border-transparent text-sm font-semibold text-brand-ink transition hover:border-brand-blue hover:text-brand-blue" href={item.external ? item.href : localizedHref(locale, item.href)}>{item.label}</Link>;
-          return <div className="group flex items-center" key={`${item.href}-${index}`}>
-            <Link className="inline-flex h-full items-center gap-1 border-b-2 border-transparent text-sm font-semibold text-brand-ink transition group-focus-within:border-brand-blue group-hover:border-brand-blue group-hover:text-brand-blue" href={localizedHref(locale, item.href)} aria-haspopup="true">
+          return <div className="flex items-center" key={`${item.href}-${index}`} onMouseEnter={() => { cancelClose(); setOpenMenu(item.href); }} onMouseLeave={scheduleClose}>
+            <Link className={`inline-flex h-full items-center gap-1 border-b-2 border-transparent text-sm font-semibold text-brand-ink transition ${openMenu === item.href ? "border-brand-blue text-brand-blue" : ""}`} href={localizedHref(locale, item.href)} aria-haspopup="true" aria-expanded={openMenu === item.href} onFocus={() => { cancelClose(); setOpenMenu(item.href); }} onClick={() => setOpenMenu(null)}>
               {item.label}<ChevronDown size={15} className="transition group-focus-within:rotate-180 group-hover:rotate-180" />
             </Link>
-            <MegaMenu locale={locale} menu={menu} />
+            <MegaMenu locale={locale} menu={menu} open={openMenu === item.href} onClose={() => setOpenMenu(null)} />
           </div>;
         })}
         <Link href={localizedHref(locale, "/search")} aria-label={locale === "zh" ? "全站搜索" : "Site search"} className="my-auto rounded-lg p-2 text-brand-ink hover:bg-brand-teal/10 hover:text-brand-blue"><Search size={18} /></Link>
