@@ -25,6 +25,7 @@ export type Video = { id: number | string; contentLocale?: Locale; title: string
 export type Faq = { id: number | string; contentLocale?: Locale; question: string; slug: string; answer: string; category: string; products?: ContentReference[]; solutions?: ContentReference[]; sortOrder?: number; featured?: boolean; seo?: Seo | null };
 export type Article = { id: number | string; contentLocale?: Locale; title: string; slug: string; description?: string | null; cover?: Media | null; publishedAt?: string | null; author?: { name: string } | null; category?: ArticleCategory | null; products?: ContentReference[] | null; solutions?: ContentReference[] | null; scenarios?: ContentReference[] | null; cases?: ContentReference[] | null; videos?: ContentReference[] | null; faqs?: Faq[] | null; blocks?: unknown[]; seo?: Seo | null };
 export type Cta = { title: string; description?: string | null; label: string; url: string; image?: Media | null; imageAlt?: string | null };
+export type HomeFeatureCard = { id?: number | string; title: string; description?: string | null; image?: Media | null; targetType: "product" | "article" | "solution" | "scenario" | "case"; product?: ContentReference | null; article?: ContentReference | null; solution?: ContentReference | null; scenario?: ContentReference | null; case?: ContentReference | null };
 export type HomeSection =
   | { __component: "shared.home-hero"; slides?: HeroSlide[] }
   | { __component: "shared.home-products"; title?: string | null; products?: Product[] }
@@ -33,7 +34,8 @@ export type HomeSection =
   | { __component: "shared.home-scenarios"; title?: string | null; scenarios?: Scenario[] }
   | { __component: "shared.home-cases"; title?: string | null; cases?: CaseStudy[] }
   | { __component: "shared.home-videos"; title?: string | null; videos?: Video[] }
-  | { __component: "shared.home-faqs"; title?: string | null; faqs?: Faq[] };
+  | { __component: "shared.home-faqs"; title?: string | null; faqs?: Faq[] }
+  | { __component: "shared.home-feature-cards"; title: string; description?: string | null; cards?: HomeFeatureCard[] };
 export type HomePage = { introTitle?: string | null; intro?: string | null; sections?: HomeSection[]; cta?: Cta | null; blocks?: unknown[]; seo?: Seo | null };
 export type About = { title: string; cover?: Media | null; coverAlt?: string | null; blocks?: unknown[]; seo?: Seo | null };
 export type ContactPage = { title?: string; intro?: string; address?: string; phone?: string; email?: string; mapEmbedUrl?: string; officeHours?: string; formTitle?: string; formIntro?: string; seo?: Seo | null };

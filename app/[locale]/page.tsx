@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CtaSection } from "@/components/home/CtaSection";
+import { FeatureCards } from "@/components/home/FeatureCards";
 import { FeaturedArticles } from "@/components/home/FeaturedArticles";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
@@ -22,6 +23,7 @@ function renderSection(section: HomeSection, locale: Locale, index: number) {
     case "shared.home-cases": return <MarketingContentGrid key={key} locale={locale} items={section.cases ?? []} kind="cases" title={section.title ?? (locale === "zh" ? "客户案例" : "Customer cases")} />;
     case "shared.home-videos": return <MarketingContentGrid key={key} locale={locale} items={section.videos ?? []} kind="videos" title={section.title ?? (locale === "zh" ? "精选视频" : "Featured videos")} />;
     case "shared.home-faqs": return <MarketingContentGrid key={key} locale={locale} items={section.faqs ?? []} kind="faq" title={section.title ?? (locale === "zh" ? "常见问题" : "Frequently asked questions")} />;
+    case "shared.home-feature-cards": return <FeatureCards key={key} locale={locale} title={section.title} description={section.description} cards={section.cards} />;
   }
 }
 
