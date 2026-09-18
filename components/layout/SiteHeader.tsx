@@ -37,6 +37,7 @@ export function SiteHeader({ locale, global, categories = [], megaMenu }: Props)
     if (path === "/solutions" && megaMenu.solutions.length) return { kind: "content" as const, path: "solutions" as const, items: megaMenu.solutions };
     if (path === "/scenarios" && megaMenu.scenarios.length) return { kind: "content" as const, path: "scenarios" as const, items: megaMenu.scenarios };
     if (path === "/cases" && megaMenu.cases.length) return { kind: "content" as const, path: "cases" as const, items: megaMenu.cases };
+    if (path === "/blog" && megaMenu.articles.length) return { kind: "content" as const, path: "blog" as const, items: megaMenu.articles };
     return null;
   };
 
@@ -65,6 +66,6 @@ export function SiteHeader({ locale, global, categories = [], megaMenu }: Props)
         <button type="button" className="rounded-lg p-2 text-brand-blue" onClick={() => setOpen(true)} aria-expanded={open} aria-label={messages[locale].menu}><Menu size={22} /></button>
       </div>
     </div>
-    <MobileNav locale={locale} open={open} onClose={() => setOpen(false)} items={items} categories={categories} />
+    <MobileNav locale={locale} open={open} onClose={() => setOpen(false)} items={items} categories={categories} megaMenu={megaMenu} />
   </header>;
 }

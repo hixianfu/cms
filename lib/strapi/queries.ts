@@ -55,12 +55,13 @@ async function getHeaderContent(path: string, locale: Locale, tags: string[]) {
   return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : [];
 }
 export async function getHeaderMegaMenu(locale: Locale): Promise<HeaderMegaMenuData> {
-  const [solutions, scenarios, cases] = await Promise.all([
+  const [solutions, scenarios, cases, articles] = await Promise.all([
     getHeaderContent("solutions", locale, [cacheTags.solutions(locale), cacheTags.solutionCategories(locale)]),
     getHeaderContent("scenarios", locale, [cacheTags.scenarios(locale), cacheTags.scenarioCategories(locale)]),
     getHeaderContent("case-studies", locale, [cacheTags.cases(locale), cacheTags.caseCategories(locale)]),
+    getHeaderContent("articles", locale, [cacheTags.articles(locale)]),
   ]);
-  return { solutions, scenarios, cases };
+  return { solutions, scenarios, cases, articles };
 }
 export async function getProductBySlug(slug: string, locale?: Locale) { const q = `&filters[slug][$eq]=${encodeURIComponent(slug)}&populate[cover]=true&populate[gallery]=true&populate[videos]=true&populate[productVideos][populate]=video&populate[specifications]=true&populate[blocks][populate]=*&populate[articles]=true`; const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, q)}`, { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale)), cacheTags.product(tagLocale(locale), slug)] } }); const item = Array.isArray(r.data) ? r.data[0] : r.data; return item ? unwrap(item) : null; }
 export async function getRelatedProducts(categorySlug?: string, locale?: Locale, excludeSlug?: string) { const q = categorySlug ? `&filters[category][slug][$eq]=${encodeURIComponent(categorySlug)}${excludeSlug ? `&filters[slug][$ne]=${encodeURIComponent(excludeSlug)}` : ""}` : ""; const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, q)}&pagination[pageSize]=8&sort=sortOrder:asc`, { next: { revalidate: 120, tags: [cacheTags.products(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }

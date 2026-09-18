@@ -19,4 +19,12 @@ describe("MegaMenu", () => {
     expect(screen.getByRole("link", { name: "电商包装" })).toHaveAttribute("href", "/zh/solutions/ecommerce");
     expect(screen.getByRole("link", { name: "仓储包装" })).toHaveAttribute("href", "/zh/solutions/warehouse");
   });
+
+  it("renders article categories and article links", () => {
+    render(<MegaMenu locale="en" menu={{ kind: "content", path: "blog", items: [
+      { id: 3, title: "Packaging guide", slug: "packaging-guide", category: { id: 11, name: "Packaging knowledge", slug: "packaging-knowledge" } },
+    ] }} />);
+    expect(screen.getByRole("link", { name: "Packaging knowledge" })).toHaveAttribute("href", "/en/blog?category=packaging-knowledge");
+    expect(screen.getByRole("link", { name: "Packaging guide" })).toHaveAttribute("href", "/en/blog/packaging-guide");
+  });
 });

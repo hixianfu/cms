@@ -7,6 +7,7 @@ export type HeaderMegaMenuData = {
   solutions: HeaderContentItem[];
   scenarios: HeaderContentItem[];
   cases: HeaderContentItem[];
+  articles: HeaderContentItem[];
 };
 export type Global = { siteName: string; siteDescription?: string | null; favicon?: Media | null; logo?: Media | null; logoAlt?: string | null; defaultSeo?: Seo | null; navigation?: NavigationItem[]; footerText?: string | null; footerLinks?: NavigationItem[]; socialLinks?: NavigationItem[] };
 export type HeroSlide = { eyebrow?: string | null; title: string; description?: string | null; image?: Media | null; imageAlt?: string | null; href?: string | null; linkUrl?: string | null; ctaLabel?: string | null; linkLabel?: string | null };
