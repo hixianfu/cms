@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { HeroSlide } from "@/types/content";
 import type { Locale } from "@/lib/i18n/config";
 import { localizedHref } from "@/lib/i18n/routing";
@@ -17,6 +17,13 @@ export function HeroCarousel({ slides, locale }: { slides: HeroSlide[]; locale: 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [failedVideos, setFailedVideos] = useState<Set<number>>(() => new Set());
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      : false,
+  );
+  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const count = slides.length;
   const zh = locale === "zh";
 
@@ -40,11 +47,30 @@ export function HeroCarousel({ slides, locale }: { slides: HeroSlide[]; locale: 
     return () => window.clearInterval(timer);
   }, [count, emblaApi, isHovered, isPlaying]);
 
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setPrefersReducedMotion(query.matches);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    videoRefs.current.forEach((video, index) => {
+      if (!video) return;
+      if (index === selectedIndex && isPlaying && !prefersReducedMotion) {
+        void video.play().catch(() => undefined);
+      } else {
+        video.pause();
+      }
+    });
+  }, [failedVideos, isPlaying, prefersReducedMotion, selectedIndex]);
+
   if (!count) return null;
 
   return (
     <section
-      className="relative min-h-[calc(100svh-5rem)] overflow-hidden bg-brand-ink text-white"
+      className="relative min-h-svh overflow-hidden bg-brand-ink text-white"
       aria-roledescription="carousel"
       aria-label={zh ? "首页轮播图" : "Homepage carousel"}
       onMouseEnter={() => setIsHovered(true)}
@@ -54,17 +80,19 @@ export function HeroCarousel({ slides, locale }: { slides: HeroSlide[]; locale: 
         if (event.key === "ArrowLeft") emblaApi?.scrollPrev();
       }}
     >
-      <div ref={emblaRef} className="min-h-[calc(100svh-5rem)] cursor-grab overflow-hidden active:cursor-grabbing">
-        <div className="flex min-h-[calc(100svh-5rem)] touch-pan-y">
+      <div ref={emblaRef} className="min-h-svh cursor-grab overflow-hidden active:cursor-grabbing">
+        <div className="flex min-h-svh touch-pan-y">
           {slides.map((slide, index) => {
             const imageUrl = resolveMediaUrl(slide.image);
+            const videoUrl = resolveMediaUrl(slide.video);
+            const showVideo = Boolean(videoUrl && !failedVideos.has(index));
             const href = slide.linkUrl ?? slide.href;
             const ctaLabel = slide.linkLabel ?? slide.ctaLabel;
 
             return (
               <div
                 key={`${slide.title}-${index}`}
-                className="relative flex min-h-[calc(100svh-5rem)] min-w-0 flex-[0_0_100%] items-center"
+                className="relative flex min-h-svh min-w-0 flex-[0_0_100%] items-center"
                 role="group"
                 aria-roledescription="slide"
                 aria-label={`${index + 1} / ${count}`}
@@ -80,8 +108,23 @@ export function HeroCarousel({ slides, locale }: { slides: HeroSlide[]; locale: 
                     className="object-cover"
                   />
                 ) : null}
+                {showVideo ? (
+                  <video
+                    ref={(element) => { videoRefs.current[index] = element; }}
+                    data-testid={`hero-video-${index}`}
+                    src={videoUrl ?? undefined}
+                    poster={imageUrl ?? undefined}
+                    muted
+                    loop
+                    playsInline
+                    preload={index === 0 ? "auto" : "metadata"}
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={() => setFailedVideos((current) => new Set(current).add(index))}
+                  />
+                ) : null}
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,30,45,0.9)_0%,rgba(8,30,45,0.72)_45%,rgba(8,30,45,0.2)_78%,rgba(8,30,45,0.08)_100%)]" />
-                <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-28 pt-20 sm:px-8 lg:px-12">
+                <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-28 pt-28 sm:px-8 lg:px-12 lg:pt-32">
                   <div className="max-w-3xl">
                     {slide.eyebrow ? <p className="mb-5 text-sm font-bold uppercase text-brand-lime">{slide.eyebrow}</p> : null}
                     <h1 className="max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-7xl">{slide.title}</h1>

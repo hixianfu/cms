@@ -10,7 +10,7 @@ export type HeaderMegaMenuData = {
   articles: HeaderContentItem[];
 };
 export type Global = { siteName: string; siteDescription?: string | null; favicon?: Media | null; logo?: Media | null; logoAlt?: string | null; defaultSeo?: Seo | null; navigation?: NavigationItem[]; footerText?: string | null; footerLinks?: NavigationItem[]; socialLinks?: NavigationItem[] };
-export type HeroSlide = { eyebrow?: string | null; title: string; description?: string | null; image?: Media | null; imageAlt?: string | null; href?: string | null; linkUrl?: string | null; ctaLabel?: string | null; linkLabel?: string | null };
+export type HeroSlide = { eyebrow?: string | null; title: string; description?: string | null; image?: Media | null; video?: Media | null; imageAlt?: string | null; href?: string | null; linkUrl?: string | null; ctaLabel?: string | null; linkLabel?: string | null };
 export type ProductVideo = { id?: number | string; title: string; kind?: "promotional" | "operation" | "maintenance" | "other"; description?: string | null; video?: Media | null };
 export type Product = { id: number | string; contentLocale?: Locale; name: string; slug: string; summary?: string | null; details?: string | null; cover?: Media | null; gallery?: Media[]; videos?: Media[]; productVideos?: ProductVideo[]; specifications?: Array<{ label: string; value: string }>; documents?: Array<{ name: string; file?: Media | null }>; category?: { name: string; slug: string } | null; sortOrder?: number; featured?: boolean; blocks?: unknown[]; seo?: Seo | null };
 export type ProductCategory = { id: number | string; contentLocale?: Locale; name: string; slug: string; description?: string | null; sortOrder?: number; parent?: ProductCategory | null; children?: ProductCategory[] };
