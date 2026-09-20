@@ -9,7 +9,7 @@ export type HeaderMegaMenuData = {
   cases: HeaderContentItem[];
   articles: HeaderContentItem[];
 };
-export type Global = { siteName: string; siteDescription?: string | null; favicon?: Media | null; logo?: Media | null; logoAlt?: string | null; defaultSeo?: Seo | null; navigation?: NavigationItem[]; footerText?: string | null; footerLinks?: NavigationItem[]; socialLinks?: NavigationItem[] };
+export type Global = { siteName: string; siteDescription?: string | null; favicon?: Media | null; logo?: Media | null; logoAlt?: string | null; defaultSeo?: Seo | null; navigation?: NavigationItem[]; footerText?: string | null; footerBusinessPhone?: string | null; footerProductPhone?: string | null; footerAfterSalesPhone?: string | null; footerWechat?: string | null; footerEmail?: string | null; footerQrCode?: Media | null; footerQrCodeAlt?: string | null; footerQrCodeLabel?: string | null; footerLinks?: NavigationItem[]; socialLinks?: NavigationItem[] };
 export type HeroSlide = { eyebrow?: string | null; title: string; description?: string | null; image?: Media | null; video?: Media | null; imageAlt?: string | null; href?: string | null; linkUrl?: string | null; ctaLabel?: string | null; linkLabel?: string | null };
 export type ProductVideo = { id?: number | string; title: string; kind?: "promotional" | "operation" | "maintenance" | "other"; description?: string | null; video?: Media | null };
 export type Product = { id: number | string; contentLocale?: Locale; name: string; slug: string; summary?: string | null; details?: string | null; cover?: Media | null; gallery?: Media[]; videos?: Media[]; productVideos?: ProductVideo[]; specifications?: Array<{ label: string; value: string }>; documents?: Array<{ name: string; file?: Media | null }>; category?: { name: string; slug: string } | null; sortOrder?: number; featured?: boolean; blocks?: unknown[]; seo?: Seo | null };
@@ -34,12 +34,17 @@ export type HomeArticleCategoryGroup = { id?: number | string; label?: string | 
 export type HomeArticleShowcase = { title: string; groups?: HomeArticleCategoryGroup[] };
 export type HomePartnerItem = { id?: number | string; name: string; image?: Media | null; imageAlt?: string | null; href: string; openInNewTab?: boolean };
 export type HomePartners = { title?: string | null; partners?: HomePartnerItem[] };
+export type HomeAdvantageItem = { id?: number | string; title: string; description: string; icon?: Media | null; iconAlt?: string | null };
+export type HomeWhyChooseUs = { title: string; subtitle?: string | null; image?: Media | null; imageAlt?: string | null; advantages?: HomeAdvantageItem[] };
+export type HomeProductCategory = { id?: number | string; label?: string | null; category?: ProductCategory | null; products?: Product[] };
+export type HomeProducts = { title?: string | null; categories?: HomeProductCategory[]; products?: Product[] };
 export type HomeSection =
   | { __component: "shared.home-hero"; slides?: HeroSlide[] }
-  | { __component: "shared.home-products"; title?: string | null; products?: Product[] }
+  | ({ __component: "shared.home-products" } & HomeProducts)
   | { __component: "shared.home-articles"; title?: string | null; articles?: Article[] }
   | ({ __component: "shared.home-article-showcase" } & HomeArticleShowcase)
   | ({ __component: "shared.home-partners" } & HomePartners)
+  | ({ __component: "shared.home-why-choose-us" } & HomeWhyChooseUs)
   | ({ __component: "shared.home-solutions" } & HomeSolutions)
   | { __component: "shared.home-scenarios"; title?: string | null; scenarios?: Scenario[] }
   | { __component: "shared.home-cases"; title?: string | null; cases?: CaseStudy[] }

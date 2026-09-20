@@ -6,12 +6,13 @@ import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Locale } from "@/lib/i18n/config";
 
-type Columns = "features" | "products" | "articles";
+type Columns = "features" | "products" | "articles" | "productCategories";
 
 const slideWidths: Record<Columns, string> = {
   features: "md:flex-[0_0_50%] xl:flex-[0_0_25%]",
-  products: "sm:flex-[0_0_50%] lg:flex-[0_0_33.333333%]",
+  products: "sm:flex-[0_0_50%] lg:flex-[0_0_25%]",
   articles: "md:flex-[0_0_33.333333%]",
+  productCategories: "flex-[0_0_50%] sm:flex-[0_0_20%] lg:flex-[0_0_10%]",
 };
 
 export function ContentCarousel({ children, columns, locale, label }: { children: ReactNode; columns: Columns; locale: Locale; label: string }) {

@@ -16,14 +16,14 @@ const section = {
 };
 
 describe("PartnersShowcase", () => {
-  it("renders configured links in a five-column desktop grid", () => {
+  it("renders configured links in the current responsive desktop grid", () => {
     const { container } = render(<PartnersShowcase locale="en" section={section} />);
 
     expect(screen.getAllByRole("link")).toHaveLength(6);
     expect(screen.getByRole("link", { name: "Amazon" })).toHaveAttribute("href", "https://amazon.com");
     expect(screen.getByRole("link", { name: "Amazon" })).toHaveAttribute("target", "_blank");
     expect(screen.getByRole("link", { name: "Google partner" })).toHaveAttribute("href", "/en/about");
-    expect(container.querySelector(".lg\\:grid-cols-5")).toBeInTheDocument();
+    expect(container.querySelector(".lg\\:grid-cols-8")).toBeInTheDocument();
   });
 
   it("dims the other partners while one partner is hovered", async () => {

@@ -13,9 +13,9 @@ export function PartnersShowcase({ locale, section }: { locale: Locale; section:
   const partners = section.partners ?? [];
   if (!partners.length) return null;
 
-  return <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8" aria-label={section.title ?? (locale === "zh" ? "合作伙伴" : "Partners")}>
+  return <section className="mx-auto py-16" aria-label={section.title ?? (locale === "zh" ? "合作伙伴" : "Partners")}>
     {section.title ? <h2 className="mb-10 text-center text-3xl font-semibold tracking-tight text-brand-ink sm:text-4xl">{section.title}</h2> : null}
-    <div className="grid grid-cols-2 border-y border-brand-border bg-white sm:grid-cols-3 lg:grid-cols-5" onMouseLeave={() => setActiveIndex(null)}>
+    <div className="grid grid-cols-2 border-y border-brand-border sm:grid-cols-5 lg:grid-cols-8" onMouseLeave={() => setActiveIndex(null)}>
       {partners.map((partner, index) => {
         const image = resolveMediaUrl(partner.image);
         const muted = activeIndex !== null && activeIndex !== index;

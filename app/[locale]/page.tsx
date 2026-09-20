@@ -10,6 +10,7 @@ import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { MarketingContentGrid } from "@/components/home/MarketingContentGrid";
 import { PartnersShowcase } from "@/components/home/PartnersShowcase";
 import { SolutionsShowcase } from "@/components/home/SolutionsShowcase";
+import { WhyChooseUs } from "@/components/home/WhyChooseUs";
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
 import { getGlobal, getHomePage } from "@/lib/strapi/queries";
 import { createMetadata } from "@/lib/seo/metadata";
@@ -21,10 +22,11 @@ function renderSection(section: HomeSection, locale: Locale, index: number) {
   const key = `${section.__component}-${index}`;
   switch (section.__component) {
     case "shared.home-hero": return section.slides?.length ? <HeroCarousel key={key} locale={locale} slides={section.slides} /> : null;
-    case "shared.home-products": return <FeaturedProducts key={key} locale={locale} products={section.products ?? []} title={section.title} />;
+    case "shared.home-products": return <FeaturedProducts key={key} locale={locale} products={section.products ?? []} categories={section.categories ?? []} title={section.title} />;
     case "shared.home-articles": return <FeaturedArticles key={key} locale={locale} articles={section.articles ?? []} title={section.title} />;
     case "shared.home-article-showcase": return <ArticleCategoryShowcase key={key} locale={locale} section={section} />;
     case "shared.home-partners": return <PartnersShowcase key={key} locale={locale} section={section} />;
+    case "shared.home-why-choose-us": return <WhyChooseUs key={key} section={section} />;
     case "shared.home-solutions": return <SolutionsShowcase key={key} locale={locale} section={section} />;
     case "shared.home-scenarios": return <MarketingContentGrid key={key} locale={locale} items={section.scenarios ?? []} kind="scenarios" title={section.title ?? (locale === "zh" ? "应用场景" : "Application scenarios")} />;
     case "shared.home-cases": return <MarketingContentGrid key={key} locale={locale} items={section.cases ?? []} kind="cases" title={section.title ?? (locale === "zh" ? "客户案例" : "Customer cases")} />;
