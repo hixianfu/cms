@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CtaSection } from "@/components/home/CtaSection";
+import { ArticleCategoryShowcase } from "@/components/home/ArticleCategoryShowcase";
 import { CompanyShowcase } from "@/components/home/CompanyShowcase";
 import { FeatureCards } from "@/components/home/FeatureCards";
 import { FeaturedArticles } from "@/components/home/FeaturedArticles";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { MarketingContentGrid } from "@/components/home/MarketingContentGrid";
+import { PartnersShowcase } from "@/components/home/PartnersShowcase";
+import { SolutionsShowcase } from "@/components/home/SolutionsShowcase";
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
 import { getGlobal, getHomePage } from "@/lib/strapi/queries";
 import { createMetadata } from "@/lib/seo/metadata";
@@ -20,7 +23,9 @@ function renderSection(section: HomeSection, locale: Locale, index: number) {
     case "shared.home-hero": return section.slides?.length ? <HeroCarousel key={key} locale={locale} slides={section.slides} /> : null;
     case "shared.home-products": return <FeaturedProducts key={key} locale={locale} products={section.products ?? []} title={section.title} />;
     case "shared.home-articles": return <FeaturedArticles key={key} locale={locale} articles={section.articles ?? []} title={section.title} />;
-    case "shared.home-solutions": return <MarketingContentGrid key={key} locale={locale} items={section.solutions ?? []} kind="solutions" title={section.title ?? (locale === "zh" ? "行业解决方案" : "Industry solutions")} description={locale === "zh" ? "从客户问题出发，找到适合业务的包装方式。" : "Start with the business challenge and find the right packaging approach."} />;
+    case "shared.home-article-showcase": return <ArticleCategoryShowcase key={key} locale={locale} section={section} />;
+    case "shared.home-partners": return <PartnersShowcase key={key} locale={locale} section={section} />;
+    case "shared.home-solutions": return <SolutionsShowcase key={key} locale={locale} section={section} />;
     case "shared.home-scenarios": return <MarketingContentGrid key={key} locale={locale} items={section.scenarios ?? []} kind="scenarios" title={section.title ?? (locale === "zh" ? "应用场景" : "Application scenarios")} />;
     case "shared.home-cases": return <MarketingContentGrid key={key} locale={locale} items={section.cases ?? []} kind="cases" title={section.title ?? (locale === "zh" ? "客户案例" : "Customer cases")} />;
     case "shared.home-videos": return <MarketingContentGrid key={key} locale={locale} items={section.videos ?? []} kind="videos" title={section.title ?? (locale === "zh" ? "精选视频" : "Featured videos")} />;

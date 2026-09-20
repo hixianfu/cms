@@ -10,10 +10,10 @@ const products = Array.from({ length: 8 }, (_, index) => ({
 }));
 
 describe("FeaturedProducts", () => {
-  it("shows at most six featured products", () => {
+  it("keeps every configured featured product available in the carousel", () => {
     render(<FeaturedProducts locale="zh" products={products} />);
-    expect(screen.getAllByRole("article")).toHaveLength(6);
-    expect(screen.queryByText("产品 7")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("article")).toHaveLength(8);
+    expect(screen.getByText("产品 8")).toBeInTheDocument();
   });
 
   it("does not render when there are no products", () => {

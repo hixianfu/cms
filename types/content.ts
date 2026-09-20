@@ -28,11 +28,19 @@ export type Cta = { title: string; description?: string | null; label: string; u
 export type HomeFeatureCard = { id?: number | string; title: string; description?: string | null; image?: Media | null; targetType: "product" | "article" | "solution" | "scenario" | "case"; product?: ContentReference | null; article?: ContentReference | null; solution?: ContentReference | null; scenario?: ContentReference | null; case?: ContentReference | null };
 export type HomeShowcaseHighlight = { id?: number | string; text: string };
 export type HomeCompanyShowcase = { title: string; subtitle?: string | null; description?: string | null; buttonLabel?: string | null; backgroundImage?: Media | null; imageAlt?: string | null; article?: ContentReference | null; highlights?: HomeShowcaseHighlight[] };
+export type HomeSolutionEntry = { id?: number | string; title?: string | null; description?: string | null; backgroundImage?: Media | null; imageAlt?: string | null; category?: ContentCategory | null; solutions?: Solution[] };
+export type HomeSolutions = { title?: string | null; backgroundImage?: Media | null; imageAlt?: string | null; buttonLabel?: string | null; entries?: HomeSolutionEntry[]; solutions?: Solution[] };
+export type HomeArticleCategoryGroup = { id?: number | string; label?: string | null; category?: ArticleCategory | null; articles?: Article[] };
+export type HomeArticleShowcase = { title: string; groups?: HomeArticleCategoryGroup[] };
+export type HomePartnerItem = { id?: number | string; name: string; image?: Media | null; imageAlt?: string | null; href: string; openInNewTab?: boolean };
+export type HomePartners = { title?: string | null; partners?: HomePartnerItem[] };
 export type HomeSection =
   | { __component: "shared.home-hero"; slides?: HeroSlide[] }
   | { __component: "shared.home-products"; title?: string | null; products?: Product[] }
   | { __component: "shared.home-articles"; title?: string | null; articles?: Article[] }
-  | { __component: "shared.home-solutions"; title?: string | null; solutions?: Solution[] }
+  | ({ __component: "shared.home-article-showcase" } & HomeArticleShowcase)
+  | ({ __component: "shared.home-partners" } & HomePartners)
+  | ({ __component: "shared.home-solutions" } & HomeSolutions)
   | { __component: "shared.home-scenarios"; title?: string | null; scenarios?: Scenario[] }
   | { __component: "shared.home-cases"; title?: string | null; cases?: CaseStudy[] }
   | { __component: "shared.home-videos"; title?: string | null; videos?: Video[] }

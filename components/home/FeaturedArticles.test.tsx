@@ -9,10 +9,10 @@ const articles = Array.from({ length: 5 }, (_, index) => ({
 }));
 
 describe("FeaturedArticles", () => {
-  it("shows at most three articles", () => {
+  it("keeps every configured article available in the carousel", () => {
     render(<FeaturedArticles locale="en" articles={articles} />);
-    expect(screen.getAllByRole("article")).toHaveLength(3);
-    expect(screen.queryByText("Article 4")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("article")).toHaveLength(5);
+    expect(screen.getByText("Article 5")).toBeInTheDocument();
   });
 
   it("does not render when there are no articles", () => {
