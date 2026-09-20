@@ -71,7 +71,10 @@ export function ListingHero({
             aria-label={isChinese ? "\u9762\u5305\u5c51" : "Breadcrumb"}
             className="flex items-center gap-2 text-sm text-slate-200"
           >
-            <a className="font-semibold hover:text-brand-lime" href={localizedHref(locale, "/")}>
+            <a
+              className="inline-flex min-h-11 items-center px-3 font-semibold hover:text-brand-lime"
+              href={localizedHref(locale, "/")}
+            >
               {isChinese ? "\u9996\u9875" : "Home"}
             </a>
             <span aria-hidden="true">/</span>

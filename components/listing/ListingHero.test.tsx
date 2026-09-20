@@ -24,6 +24,11 @@ describe("ListingHero", () => {
     expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toHaveTextContent(
       "Home",
     );
+    expect(screen.getByRole("link", { name: "Home" })).toHaveClass(
+      "inline-flex",
+      "min-h-11",
+      "px-3",
+    );
     expect(screen.getByTestId("listing-hero")).toHaveAttribute(
       "data-variant",
       "immersive",
