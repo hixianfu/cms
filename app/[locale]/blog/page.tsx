@@ -1,36 +1,172 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
-import { ArrowUpRight, CalendarDays, Search, X } from "lucide-react";
 import { notFound } from "next/navigation";
-import { getArticleCategories, getArticles, getGlobal } from "@/lib/strapi/queries";
+import {
+  ArticleListingCard,
+  articleCategoryName,
+  isKnownArticleCategory,
+} from "@/components/blog/ArticleListingCard";
+import { ListingEmptyState } from "@/components/listing/ListingEmptyState";
+import { ListingHero } from "@/components/listing/ListingHero";
+import { ListingPageShell, ListingSection } from "@/components/listing/ListingPageShell";
+import { ListingResultHeader } from "@/components/listing/ListingResultHeader";
+import { ListingSearchBar } from "@/components/listing/ListingSearchBar";
+import { ListingSidebar } from "@/components/listing/ListingSidebar";
 import { isLocale } from "@/lib/i18n/config";
 import { localizedHref } from "@/lib/i18n/routing";
-import { resolveMediaUrl } from "@/lib/strapi/image";
 import { createMetadata } from "@/lib/seo/metadata";
+import { getArticleCategories, getArticles, getGlobal } from "@/lib/strapi/queries";
 
-const categoryLabels: Record<string, { zh: string; en: string }> = {
-  "company-news": { zh: "公司新闻", en: "Company News" },
-  "industry-news": { zh: "行业新闻", en: "Industry News" },
-  charity: { zh: "爱心公益", en: "Charity & Public Welfare" },
-  "public-notices": { zh: "公示信息", en: "Public Notices" },
-};
-function categoryName(slug: string, name: string | undefined, locale: string) { const baseSlug = slug.endsWith("-en") ? slug.slice(0, -3) : slug; return categoryLabels[baseSlug]?.[locale === "zh" ? "zh" : "en"] ?? name ?? slug; }
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> { const { locale } = await params; if (!isLocale(locale)) return {}; const global = await getGlobal(locale); return createMetadata(null, { title: locale === "zh" ? "博客" : "Blog", description: global?.siteDescription ?? undefined }); }
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return {};
+  const global = await getGlobal(locale);
+  return createMetadata(null, {
+    title: locale === "zh" ? "博客" : "Blog",
+    description: global?.siteDescription ?? undefined,
+  });
+}
 
-export default async function BlogPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ category?: string; search?: string }> }) {
-  const { locale } = await params; if (!isLocale(locale)) notFound();
-  const { category, search } = await searchParams; const searchTerm = search?.trim() ?? "";
-  const categories = (await getArticleCategories(locale)).filter((item) => categoryLabels[item.slug.endsWith("-en") ? item.slug.slice(0, -3) : item.slug]);
-  const filters = [category ? `filters[category][slug][$eq]=${encodeURIComponent(category)}` : "", searchTerm ? `filters[title][$containsi]=${encodeURIComponent(searchTerm)}` : ""].filter(Boolean).join("&");
+export default async function BlogPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ category?: string; search?: string }>;
+}) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+
+  const { category, search } = await searchParams;
+  const searchTerm = search?.trim() ?? "";
+  const categories = (await getArticleCategories(locale)).filter((item) =>
+    isKnownArticleCategory(item.slug),
+  );
+  const filters = [
+    category ? `filters[category][slug][$eq]=${encodeURIComponent(category)}` : "",
+    searchTerm ? `filters[title][$containsi]=${encodeURIComponent(searchTerm)}` : "",
+  ]
+    .filter(Boolean)
+    .join("&");
   const articles = await getArticles(locale, filters);
   const selectedCategory = categories.find((item) => item.slug === category);
-  const categoryTitle = selectedCategory ? categoryName(selectedCategory.slug, selectedCategory.name, locale) : (locale === "zh" ? "全部文章" : "All articles");
-  return <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-    <header className="relative overflow-hidden rounded-3xl bg-brand-ink px-6 py-14 text-white sm:px-10"><div className="absolute -right-20 -top-28 h-72 w-72 rounded-full bg-brand-teal/30 blur-3xl" /><p className="relative text-sm font-bold uppercase tracking-[0.2em] text-brand-lime">{locale === "zh" ? "知识与洞察" : "Knowledge & insight"}</p><h1 className="relative mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">{locale === "zh" ? "来自现场的洞察" : "Insights from the field"}</h1><p className="relative mt-5 max-w-2xl text-lg leading-8 text-slate-200">{locale === "zh" ? "了解包装创新、运营效率以及帮助团队持续前进的实践。" : "Explore packaging innovation, operational efficiency, and the practices that keep teams moving."}</p></header>
-    <div className="mt-10 grid gap-8 lg:grid-cols-[15rem_1fr] lg:items-start"><aside className="brand-panel p-4 lg:sticky lg:top-28"><h2 className="border-b border-brand-border px-2 pb-4 text-sm font-semibold text-brand-ink">{locale === "zh" ? "文章分类" : "Categories"}</h2><nav className="mt-3 space-y-1" aria-label={locale === "zh" ? "文章分类" : "Article categories"}><Link href={localizedHref(locale, "/blog")} className={`block rounded-lg px-3 py-3 text-sm font-semibold transition ${!category ? "bg-brand-blue text-white" : "text-brand-ink hover:bg-brand-teal/10"}`}>{locale === "zh" ? "全部文章" : "All articles"}</Link>{categories.map((item) => <Link key={item.id} href={localizedHref(locale, `/blog?category=${item.slug}`)} className={`block rounded-lg px-3 py-3 text-sm font-semibold transition ${category === item.slug ? "bg-brand-blue text-white" : "text-brand-ink hover:bg-brand-teal/10"}`}>{categoryName(item.slug, item.name, locale)}</Link>)}</nav></aside>
-      <div><form method="get" className="mb-8 flex flex-col gap-3 rounded-2xl border border-brand-border bg-white p-3 shadow-sm sm:flex-row sm:items-center"><label htmlFor="article-search" className="sr-only">{locale === "zh" ? "搜索文章标题" : "Search article titles"}</label><div className="flex min-w-0 flex-1 items-center gap-3 px-3"><Search size={19} className="shrink-0 text-brand-teal" aria-hidden="true" /><input id="article-search" name="search" defaultValue={searchTerm} placeholder={locale === "zh" ? "搜索文章标题..." : "Search article titles..."} className="min-w-0 flex-1 bg-transparent py-2 text-sm text-brand-ink outline-none placeholder:text-slate-400" /></div>{category ? <input type="hidden" name="category" value={category} /> : null}<button type="submit" className="brand-button-primary"><Search size={16} aria-hidden="true" />{locale === "zh" ? "搜索" : "Search"}</button>{searchTerm ? <Link href={localizedHref(locale, category ? `/blog?category=${category}` : "/blog")} className="brand-button border border-brand-border text-brand-muted hover:bg-slate-50"><X size={16} aria-hidden="true" />{locale === "zh" ? "清除" : "Clear"}</Link> : null}</form>
-      <div className="mb-6 flex items-end justify-between gap-4"><div><p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-teal">{categoryTitle}</p><h2 className="mt-2 text-2xl font-semibold text-brand-ink sm:text-3xl">{searchTerm ? (locale === "zh" ? `搜索“${searchTerm}”` : `Results for “${searchTerm}”`) : (locale === "zh" ? "最新文章" : "Latest articles")}</h2></div><span className="text-sm text-brand-muted">{articles.length} {locale === "zh" ? "篇文章" : "articles"}</span></div>
-      {articles.length ? <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">{articles.map((article) => { const image = resolveMediaUrl(article.cover); const date = article.publishedAt ? new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en-US", { dateStyle: "medium" }).format(new Date(article.publishedAt)) : null; return <article key={article.id} className="group brand-card overflow-hidden"><Link href={localizedHref(locale, `/blog/${article.slug}`)} className="block focus-visible:outline-2 focus-visible:outline-brand-teal">{image ? <div className="relative aspect-[16/9] overflow-hidden bg-slate-100"><Image src={image} alt={article.cover?.alternativeText ?? article.title} fill sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw" className="object-cover transition duration-500 group-hover:scale-105" /></div> : null}<div className="flex min-h-56 flex-col p-6">{article.category ? <span className="w-fit rounded-full bg-brand-teal/10 px-3 py-1 text-xs font-semibold text-brand-blue">{categoryName(article.category.slug, article.category.name, locale)}</span> : null}<div className="mt-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-brand-teal"><CalendarDays size={14} />{date ?? (locale === "zh" ? "最新文章" : "Latest article")}</div><h2 className="mt-3 text-xl font-semibold text-brand-ink">{article.title}</h2>{article.description ? <p className="mt-3 line-clamp-3 text-sm leading-6 text-brand-muted">{article.description}</p> : null}<span className="mt-auto flex items-center gap-2 pt-6 text-sm font-semibold text-brand-blue">{locale === "zh" ? "阅读文章" : "Read article"}<ArrowUpRight size={16} /></span></div></Link></article>; })}</div> : <div className="brand-panel p-12 text-center"><p className="text-brand-muted">{searchTerm ? (locale === "zh" ? `没有找到标题包含“${searchTerm}”的文章` : `No article titles matched “${searchTerm}”`) : (locale === "zh" ? "该条件下暂无文章" : "No articles found")}</p><Link href={localizedHref(locale, category ? `/blog?category=${category}` : "/blog")} className="brand-button-primary mt-5">{locale === "zh" ? "查看全部文章" : "View all articles"}</Link></div>}</div></div>
-  </section>;
+  const categoryTitle = selectedCategory
+    ? articleCategoryName(selectedCategory.slug, selectedCategory.name, locale)
+    : locale === "zh"
+      ? "全部文章"
+      : "All articles";
+  const featuredArticle = !category && !searchTerm ? articles[0] : undefined;
+  const remainingArticles = featuredArticle ? articles.slice(1) : articles;
+
+  return (
+    <ListingPageShell>
+      <ListingHero
+        locale={locale}
+        variant="compact"
+        motif="article"
+        eyebrow={locale === "zh" ? "知识与洞察" : "Knowledge & insight"}
+        title={locale === "zh" ? "来自现场的洞察" : "Insights from the field"}
+        description={
+          locale === "zh"
+            ? "了解包装创新、运营效率以及帮助团队持续前进的实践。"
+            : "Explore packaging innovation, operational efficiency, and the practices that keep teams moving."
+        }
+      />
+      <ListingSection>
+        <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
+          <ListingSidebar
+            locale={locale}
+            label={locale === "zh" ? "文章分类" : "Article categories"}
+            allItem={{
+              href: "/blog",
+              label: locale === "zh" ? "全部文章" : "All articles",
+              active: !category,
+            }}
+            items={categories.map((item) => ({
+              href: `/blog?category=${item.slug}`,
+              label: articleCategoryName(item.slug, item.name, locale),
+              active: category === item.slug,
+            }))}
+          />
+          <div className="min-w-0 space-y-8">
+            <ListingSearchBar
+              locale={locale}
+              name="search"
+              value={searchTerm}
+              label={locale === "zh" ? "搜索文章标题" : "Search article titles"}
+              placeholder={
+                locale === "zh" ? "搜索文章标题..." : "Search article titles..."
+              }
+              preserved={{ category }}
+              clearHref={
+                searchTerm
+                  ? category
+                    ? `/blog?category=${category}`
+                    : "/blog"
+                  : undefined
+              }
+            />
+            <ListingResultHeader
+              eyebrow={categoryTitle}
+              title={
+                searchTerm
+                  ? locale === "zh"
+                    ? `搜索“${searchTerm}”`
+                    : `Results for “${searchTerm}”`
+                  : locale === "zh"
+                    ? "最新文章"
+                    : "Latest articles"
+              }
+              count={articles.length}
+              countLabel={locale === "zh" ? "篇文章" : "articles"}
+            />
+            {articles.length ? (
+              <div>
+                {featuredArticle ? (
+                  <ArticleListingCard
+                    locale={locale}
+                    article={featuredArticle}
+                    featured
+                  />
+                ) : null}
+                {remainingArticles.length ? (
+                  <div
+                    className={`grid gap-7 md:grid-cols-2 ${featuredArticle ? "mt-7" : ""}`}
+                  >
+                    {remainingArticles.map((article) => (
+                      <ArticleListingCard
+                        key={article.id}
+                        locale={locale}
+                        article={article}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <ListingEmptyState
+                message={
+                  searchTerm
+                    ? locale === "zh"
+                      ? `没有找到标题包含“${searchTerm}”的文章`
+                      : `No article titles matched “${searchTerm}”`
+                    : locale === "zh"
+                      ? "该条件下暂无文章"
+                      : "No articles found"
+                }
+                resetHref={localizedHref(
+                  locale,
+                  category ? `/blog?category=${category}` : "/blog",
+                )}
+                resetLabel={locale === "zh" ? "查看全部文章" : "View all articles"}
+              />
+            )}
+          </div>
+        </div>
+      </ListingSection>
+    </ListingPageShell>
+  );
 }
