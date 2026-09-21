@@ -34,14 +34,13 @@ export function VideoCard({ video, locale }: { video: Video; locale: Locale }) {
           ) : (
             <ListingMediaPlaceholder motif="video" />
           )}
-          <button
-            type="button"
-            aria-label={playLabel}
-            tabIndex={-1}
+          <span
+            data-testid="video-card-play-indicator"
+            aria-hidden="true"
             className="absolute left-1/2 top-1/2 inline-flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brand-ink shadow-lg transition group-hover:scale-105"
           >
             <Play aria-hidden="true" fill="currentColor" size={22} />
-          </button>
+          </span>
           <span className="absolute bottom-3 left-3 rounded-full bg-brand-ink/85 px-3 py-1 text-xs font-semibold text-white">
             {videoCategoryLabel(video.category, locale)}
           </span>

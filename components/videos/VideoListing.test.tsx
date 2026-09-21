@@ -1,9 +1,11 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { VideoCard } from "./VideoCard";
+import { VideoFilters } from "./VideoFilters";
 
 describe("video listing", () => {
-  it("renders a 16:9 media region, centered accessible play control, category badge, and localized route", () => {
+  afterEach(cleanup);
+  it("renders a 16:9 media region, centered play indicator, category badge, and localized route", () => {
     render(
       <VideoCard
         locale="en"
@@ -25,8 +27,12 @@ describe("video listing", () => {
     );
     expect(screen.getByRole("img", { name: "Machine" })).toBeInTheDocument();
     expect(within(article).getByText("Product introduction")).toBeInTheDocument();
-    expect(within(article).getByRole("button", { name: "Watch video" })).toBeInTheDocument();
-    expect(within(article).getByRole("button", { name: "Watch video" })).toHaveClass(
+    expect(within(article).queryByRole("button", { name: "Watch video" })).not.toBeInTheDocument();
+    expect(within(article).getByTestId("video-card-play-indicator")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    expect(within(article).getByTestId("video-card-play-indicator")).toHaveClass(
       "absolute",
       "left-1/2",
       "top-1/2",
@@ -48,6 +54,19 @@ describe("video listing", () => {
       "/zh/videos/notice",
     );
     expect(screen.getByTestId("listing-media-placeholder")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "观看视频" })).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getByTestId("video-card-play-indicator")).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("localizes the active search chip", () => {
+    const { rerender } = render(
+      <VideoFilters locale="en" q="machine" categories={[]} products={[]} />,
+    );
+
+    expect(screen.getByRole("link", { name: "Remove Search: machine filter" })).toBeInTheDocument();
+
+    rerender(<VideoFilters locale="zh" q="机器" categories={[]} products={[]} />);
+
+    expect(screen.getByRole("link", { name: "移除搜索：机器筛选" })).toBeInTheDocument();
   });
 });

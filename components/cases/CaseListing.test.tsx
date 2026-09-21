@@ -1,9 +1,10 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { CaseCard } from "./CaseCard";
 import { CaseFilters } from "./CaseFilters";
 
 describe("case listing", () => {
+  afterEach(cleanup);
   it("renders category and industry metadata, an optional results excerpt, and a localized route", () => {
     render(
       <CaseCard
@@ -90,5 +91,33 @@ describe("case listing", () => {
       "href",
       "/en/cases?q=wrap&category=automation&product=air&scenario=fulfillment",
     );
+  });
+
+  it("localizes the active search chip", () => {
+    const { rerender } = render(
+      <CaseFilters
+        locale="en"
+        q="wrap"
+        categories={[]}
+        industries={[]}
+        products={[]}
+        scenarios={[]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Remove Search: wrap filter" })).toBeInTheDocument();
+
+    rerender(
+      <CaseFilters
+        locale="zh"
+        q="包装"
+        categories={[]}
+        industries={[]}
+        products={[]}
+        scenarios={[]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "移除搜索：包装筛选" })).toBeInTheDocument();
   });
 });

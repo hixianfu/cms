@@ -16,7 +16,7 @@ export function VideoFilters({ locale, q, category, product, categories, product
   const labelFor = (name: string, value: string | undefined) =>
     value ? ({ category: categories, product: products }[name] ?? []).find((option) => option.value === value)?.label ?? value : "";
   const activeFilters: ActiveFilter[] = ([
-    ["q", q, q ? `Search: ${q}` : ""],
+    ["q", q, q ? (locale === "zh" ? `搜索：${q}` : `Search: ${q}`) : ""],
     ["category", category, labelFor("category", category)],
     ["product", product, labelFor("product", product)],
   ] as Array<[string, string | undefined, string]>)

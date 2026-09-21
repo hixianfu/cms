@@ -38,7 +38,7 @@ export function CaseFilters({
   const labelFor = (name: string, value: string | undefined) =>
     value ? ({ category: categories, industry: industries, product: products, scenario: scenarios }[name] ?? []).find((option) => option.value === value)?.label ?? value : "";
   const activeFilters: ActiveFilter[] = ([
-    ["q", q, q ? `Search: ${q}` : ""],
+    ["q", q, q ? (locale === "zh" ? `搜索：${q}` : `Search: ${q}`) : ""],
     ["category", category, labelFor("category", category)],
     ["industry", industry, labelFor("industry", industry)],
     ["product", product, labelFor("product", product)],
