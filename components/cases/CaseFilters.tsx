@@ -1,10 +1,102 @@
-import { Search, X } from "lucide-react";
-import Link from "next/link";
-import type { Locale } from "@/types/content";
-import { localizedHref } from "@/lib/i18n/routing";
+import type { Locale } from "@/lib/i18n/config";
+import { ListingFilterPanel, type ActiveFilter, type FilterField } from "@/components/listing/ListingFilterPanel";
 
 type Option = { value: string; label: string };
-export function CaseFilters({ locale, q, category, industry, product, scenario, categories, industries, products, scenarios }: { locale: Locale; q?: string; category?: string; industry?: string; product?: string; scenario?: string; categories: Option[]; industries: Option[]; products: Option[]; scenarios: Option[] }) {
-  const hasFilters = Boolean(q || category || industry || product || scenario);
-  return <form method="get" className="brand-panel mb-8 grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_auto] 2xl:items-end"><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? "搜索案例" : "Search cases"}<span className="mt-2 flex items-center gap-2 rounded-lg border border-brand-border px-3"><Search size={16} className="text-brand-teal" /><input name="q" defaultValue={q} placeholder={locale === "zh" ? "搜索案例标题" : "Search case titles"} className="min-w-0 flex-1 bg-transparent py-2.5 outline-none" /></span></label><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? "分类" : "Category"}<select name="category" defaultValue={category} className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2.5 font-normal"><option value="">{locale === "zh" ? "全部分类" : "All categories"}</option>{categories.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? "行业" : "Industry"}<select name="industry" defaultValue={industry} className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2.5 font-normal"><option value="">{locale === "zh" ? "全部行业" : "All industries"}</option>{industries.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? "产品" : "Product"}<select name="product" defaultValue={product} className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2.5 font-normal"><option value="">{locale === "zh" ? "全部产品" : "All products"}</option>{products.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? "应用场景" : "Scenario"}<select name="scenario" defaultValue={scenario} className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2.5 font-normal"><option value="">{locale === "zh" ? "全部场景" : "All scenarios"}</option>{scenarios.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label><div className="flex gap-2"><button type="submit" className="brand-button-primary"><Search size={16} />{locale === "zh" ? "筛选" : "Filter"}</button>{hasFilters ? <Link href={localizedHref(locale, "/cases")} className="brand-button border border-brand-border"><X size={16} />{locale === "zh" ? "清除" : "Clear"}</Link> : null}</div></form>;
+
+function queryHref(values: Record<string, string | undefined>) {
+  const query = Object.entries(values)
+    .filter(([, value]) => value)
+    .map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value as string)}`)
+    .join("&");
+  return query ? `/cases?${query}` : "/cases";
+}
+
+export function CaseFilters({
+  locale,
+  q,
+  category,
+  industry,
+  product,
+  scenario,
+  categories,
+  industries,
+  products,
+  scenarios,
+}: {
+  locale: Locale;
+  q?: string;
+  category?: string;
+  industry?: string;
+  product?: string;
+  scenario?: string;
+  categories: Option[];
+  industries: Option[];
+  products: Option[];
+  scenarios: Option[];
+}) {
+  const values = { q, category, industry, product, scenario };
+  const labelFor = (name: string, value: string | undefined) =>
+    value ? ({ category: categories, industry: industries, product: products, scenario: scenarios }[name] ?? []).find((option) => option.value === value)?.label ?? value : "";
+  const activeFilters: ActiveFilter[] = ([
+    ["q", q, q ? `Search: ${q}` : ""],
+    ["category", category, labelFor("category", category)],
+    ["industry", industry, labelFor("industry", industry)],
+    ["product", product, labelFor("product", product)],
+    ["scenario", scenario, labelFor("scenario", scenario)],
+  ] as Array<[string, string | undefined, string]>)
+    .filter(([, value]) => value)
+    .map(([name, , label]) => ({
+      name,
+      label,
+      clearHref: queryHref(Object.fromEntries(Object.entries(values).filter(([key]) => key !== name))),
+    }));
+
+  const primaryFields: FilterField[] = [
+    {
+      name: "category",
+      label: locale === "zh" ? "分类" : "Category",
+      value: category,
+      allLabel: locale === "zh" ? "全部分类" : "All categories",
+      options: categories,
+    },
+    {
+      name: "industry",
+      label: locale === "zh" ? "行业" : "Industry",
+      value: industry,
+      allLabel: locale === "zh" ? "全部行业" : "All industries",
+      options: industries,
+    },
+  ];
+  const secondaryFields: FilterField[] = [
+    {
+      name: "product",
+      label: locale === "zh" ? "产品" : "Product",
+      value: product,
+      allLabel: locale === "zh" ? "全部产品" : "All products",
+      options: products,
+    },
+    {
+      name: "scenario",
+      label: locale === "zh" ? "应用场景" : "Scenario",
+      value: scenario,
+      allLabel: locale === "zh" ? "全部场景" : "All scenarios",
+      options: scenarios,
+    },
+  ];
+
+  return (
+    <ListingFilterPanel
+      locale={locale}
+      search={{
+        name: "q",
+        value: q,
+        label: locale === "zh" ? "搜索案例" : "Search cases",
+        placeholder: locale === "zh" ? "搜索案例标题" : "Search case titles",
+      }}
+      primaryFields={primaryFields}
+      secondaryFields={secondaryFields}
+      activeFilters={activeFilters}
+      resetHref="/cases"
+    />
+  );
 }

@@ -1,6 +1,59 @@
-import { Search, X } from "lucide-react";
-import Link from "next/link";
 import type { Locale } from "@/lib/i18n/config";
-import { localizedHref } from "@/lib/i18n/routing";
+import { ListingFilterPanel, type ActiveFilter, type FilterField } from "@/components/listing/ListingFilterPanel";
+
 type Option = { value: string; label: string };
-export function VideoFilters({ locale, q, category, product, categories, products }: { locale: Locale; q?: string; category?: string; product?: string; categories: Option[]; products: Option[] }) { const zh = locale === "zh"; return <form method="get" className="brand-panel mb-8 grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-[1.5fr_1fr_1fr_auto] xl:items-end"><label className="block text-sm font-semibold text-brand-ink">{zh ? "搜索视频" : "Search videos"}<span className="mt-2 flex items-center gap-2 rounded-lg border border-brand-border px-3"><Search size={16} className="text-brand-teal" /><input name="q" defaultValue={q} placeholder={zh ? "搜索视频标题" : "Search video titles"} className="min-w-0 flex-1 bg-transparent py-2.5 outline-none" /></span></label><label className="block text-sm font-semibold text-brand-ink">{zh ? "视频分类" : "Category"}<select name="category" defaultValue={category} className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2.5 font-normal"><option value="">{zh ? "全部分类" : "All categories"}</option>{categories.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label><label className="block text-sm font-semibold text-brand-ink">{zh ? "关联产品" : "Product"}<select name="product" defaultValue={product} className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2.5 font-normal"><option value="">{zh ? "全部产品" : "All products"}</option>{products.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label><div className="flex gap-2"><button type="submit" className="brand-button-primary"><Search size={16} />{zh ? "筛选" : "Filter"}</button>{q || category || product ? <Link href={localizedHref(locale, "/videos")} className="brand-button border border-brand-border"><X size={16} />{zh ? "清除" : "Clear"}</Link> : null}</div></form>; }
+
+function queryHref(values: Record<string, string | undefined>) {
+  const query = Object.entries(values)
+    .filter(([, value]) => value)
+    .map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value as string)}`)
+    .join("&");
+  return query ? `/videos?${query}` : "/videos";
+}
+
+export function VideoFilters({ locale, q, category, product, categories, products }: { locale: Locale; q?: string; category?: string; product?: string; categories: Option[]; products: Option[] }) {
+  const values = { q, category, product };
+  const labelFor = (name: string, value: string | undefined) =>
+    value ? ({ category: categories, product: products }[name] ?? []).find((option) => option.value === value)?.label ?? value : "";
+  const activeFilters: ActiveFilter[] = ([
+    ["q", q, q ? `Search: ${q}` : ""],
+    ["category", category, labelFor("category", category)],
+    ["product", product, labelFor("product", product)],
+  ] as Array<[string, string | undefined, string]>)
+    .filter(([, value]) => value)
+    .map(([name, , label]) => ({
+      name,
+      label,
+      clearHref: queryHref(Object.fromEntries(Object.entries(values).filter(([key]) => key !== name))),
+    }));
+  const primaryFields: FilterField[] = [{
+    name: "category",
+    label: locale === "zh" ? "视频分类" : "Category",
+    value: category,
+    allLabel: locale === "zh" ? "全部分类" : "All categories",
+    options: categories,
+  }];
+  const secondaryFields: FilterField[] = [{
+    name: "product",
+    label: locale === "zh" ? "关联产品" : "Product",
+    value: product,
+    allLabel: locale === "zh" ? "全部产品" : "All products",
+    options: products,
+  }];
+
+  return (
+    <ListingFilterPanel
+      locale={locale}
+      search={{
+        name: "q",
+        value: q,
+        label: locale === "zh" ? "搜索视频" : "Search videos",
+        placeholder: locale === "zh" ? "搜索视频标题" : "Search video titles",
+      }}
+      primaryFields={primaryFields}
+      secondaryFields={secondaryFields}
+      activeFilters={activeFilters}
+      resetHref="/videos"
+    />
+  );
+}
