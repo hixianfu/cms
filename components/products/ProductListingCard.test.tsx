@@ -40,9 +40,12 @@ describe("ProductListingCard", () => {
     const card = within(container);
     expect(card.getByRole("article")).toHaveAttribute("data-featured", "true");
     expect(card.getByRole("link", { name: /Air system/ })).toHaveClass(
+      "md:grid",
       "md:grid-cols-2",
     );
-    expect(card.getByTestId("listing-media-placeholder")).toBeInTheDocument();
+    const placeholder = card.getByTestId("listing-media-placeholder");
+    expect(placeholder).toBeInTheDocument();
+    expect(placeholder.parentElement).toHaveClass("aspect-[4/3]");
 
     rerender(
       <ProductListingCard
@@ -55,6 +58,8 @@ describe("ProductListingCard", () => {
       "href",
       "/zh/products/paper",
     );
-    expect(card.getByTestId("listing-media-placeholder")).toBeInTheDocument();
+    expect(card.getByTestId("listing-media-placeholder").parentElement).toHaveClass(
+      "aspect-[4/3]",
+    );
   });
 });

@@ -134,6 +134,7 @@ export default async function BlogPage({
                 ) : null}
                 {remainingArticles.length ? (
                   <div
+                    data-testid="article-listing-grid"
                     className={`grid gap-7 md:grid-cols-2 ${featuredArticle ? "mt-7" : ""}`}
                   >
                     {remainingArticles.map((article) => (

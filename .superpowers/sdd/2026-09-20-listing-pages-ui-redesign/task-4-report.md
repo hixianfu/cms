@@ -113,3 +113,62 @@ The literal `pnpm run lint` command traverses `.worktrees/homepage-hero-media/.n
 - `pnpm run lint` is not clean because ESLint includes unrelated generated files under `.worktrees/homepage-hero-media/.next`. The active worktree passes ESLint with that nested worktree excluded; seven existing warnings remain outside Task 4.
 - Pnpm commands require the approved elevated execution path in this environment because the restricted sandbox blocks pnpm's Windows short-path lookup.
 - Browser QA and production build are deferred to Task 8 by the approved implementation plan.
+
+## Fix Round 1
+
+Added direct async route composition tests with Strapi queries mocked and the real listing/card components rendered.
+
+- Product route coverage now asserts the immersive Hero and the sparse featured rule for result counts 1, 2, and 3.
+- Blog route coverage now asserts the compact Hero, unfiltered first-article feature treatment, disabled featuring for active category and non-empty search filters, and a two-column grid containing only the post-feature articles.
+- Featured card tests now require both `md:grid` and `md:grid-cols-2`.
+- Missing-media tests now require the product 4:3 and article 16:9 wrapper classes.
+- Added `data-testid="article-listing-grid"` to the real blog remainder grid as the minimal stable route-level observation point.
+
+Files added or updated:
+
+- `app/[locale]/products/page.test.tsx`
+- `app/[locale]/blog/page.test.tsx`
+- `app/[locale]/blog/page.tsx`
+- `components/products/ProductListingCard.test.tsx`
+- `components/blog/ArticleListingCard.test.tsx`
+
+RED command:
+
+```text
+pnpm test -- 'app/[locale]/products/page.test.tsx' 'app/[locale]/blog/page.test.tsx' components/products/ProductListingCard.test.tsx components/blog/ArticleListingCard.test.tsx
+```
+
+Result before the production observation hook was added:
+
+```text
+Test Files  1 failed | 3 passed (4)
+Tests       3 failed | 7 passed (10)
+```
+
+All three failures were the expected inability to locate `article-listing-grid`; the new product count/Hero assertions and strengthened card assertions executed successfully.
+
+GREEN command:
+
+```text
+pnpm test -- 'app/[locale]/products/page.test.tsx' 'app/[locale]/blog/page.test.tsx' components/products/ProductListingCard.test.tsx components/blog/ArticleListingCard.test.tsx
+Test Files  4 passed (4)
+Tests       10 passed (10)
+```
+
+Static checks:
+
+```text
+pnpm exec eslint 'app/[locale]/products/page.tsx' 'app/[locale]/products/page.test.tsx' 'app/[locale]/blog/page.tsx' 'app/[locale]/blog/page.test.tsx' components/products/ProductListingCard.test.tsx components/blog/ArticleListingCard.test.tsx
+exit 0, no output
+
+pnpm exec tsc --noEmit
+exit 0, no output
+```
+
+Fix-round self-review:
+
+- Query functions are the only application dependencies mocked; Heroes, sidebars, cards, featured attributes, and layout classes are rendered from production components.
+- The product test would fail if the `<= 2` threshold moved to include three items or if the first item stopped receiving `featured`.
+- The blog tests would fail if category/search filtering no longer disabled featuring, if the featured article remained inside the remainder grid, or if the grid changed from two columns.
+- Hero assertions would fail if products stopped using `immersive` or blog stopped using `compact`.
+- Card assertions would fail if responsive grid display or fixed-ratio missing-media wrappers were removed.

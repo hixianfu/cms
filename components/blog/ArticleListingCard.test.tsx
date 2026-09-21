@@ -42,6 +42,7 @@ describe("ArticleListingCard", () => {
     const card = within(container);
     expect(card.getByRole("article")).toHaveAttribute("data-featured", "true");
     expect(card.getByRole("link", { name: /Notice/ })).toHaveClass(
+      "md:grid",
       "md:grid-cols-2",
     );
     expect(card.getByRole("link", { name: /Notice/ })).toHaveAttribute(
@@ -49,6 +50,8 @@ describe("ArticleListingCard", () => {
       "/zh/blog/notice",
     );
     expect(card.getByText("最新文章")).toBeInTheDocument();
-    expect(card.getByTestId("listing-media-placeholder")).toBeInTheDocument();
+    expect(card.getByTestId("listing-media-placeholder").parentElement).toHaveClass(
+      "aspect-video",
+    );
   });
 });
