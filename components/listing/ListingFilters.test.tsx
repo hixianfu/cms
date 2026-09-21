@@ -97,9 +97,15 @@ describe("listing filters", () => {
       "href",
       "/en/cases?q=wrap&product=air",
     );
+    expect(within(desktop).getByRole("link", { name: "Remove Machines filter" })).toHaveClass(
+      "min-h-11",
+    );
     expect(within(desktop).getByRole("link", { name: "Clear all filters" })).toHaveAttribute(
       "href",
       "/en/cases",
+    );
+    expect(within(desktop).getByRole("link", { name: "Clear all filters" })).toHaveClass(
+      "min-h-11",
     );
 
     await user.click(screen.getByRole("button", { name: "Open filters" }));

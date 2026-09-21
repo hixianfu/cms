@@ -103,7 +103,7 @@ function ActiveFilters({
           key={filter.name}
           href={localizedHref(locale, filter.clearHref)}
           aria-label={isChinese ? `移除${filter.label}筛选` : `Remove ${filter.label} filter`}
-          className="inline-flex min-h-9 items-center gap-2 rounded-full bg-brand-teal/10 px-3 py-1.5 text-sm font-semibold text-brand-blue hover:bg-brand-teal/20"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-teal/10 px-3 py-1.5 text-sm font-semibold text-brand-blue hover:bg-brand-teal/20"
         >
           {filter.label}
           <X aria-hidden="true" size={14} />
@@ -112,7 +112,7 @@ function ActiveFilters({
       <Link
         href={localizedHref(locale, resetHref)}
         aria-label={isChinese ? "清除全部筛选" : "Clear all filters"}
-        className="inline-flex min-h-9 items-center px-2 text-sm font-semibold text-brand-blue hover:text-brand-teal"
+        className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-brand-blue hover:text-brand-teal"
       >
         {isChinese ? "清除全部" : "Clear all"}
       </Link>
