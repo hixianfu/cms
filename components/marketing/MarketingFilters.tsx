@@ -1,10 +1,100 @@
-import Link from "next/link";
-import { Search, X } from "lucide-react";
-import { localizedHref } from "@/lib/i18n/routing";
+import { ListingFilterPanel, type ActiveFilter } from "@/components/listing/ListingFilterPanel";
 import type { Locale } from "@/types/content";
 
 type Option = { value: string; label: string };
-export function MarketingFilters({ locale, path, q, category, industry, categories, industries }: { locale: Locale; path: "solutions" | "scenarios"; q?: string; category?: string; industry?: string; categories: Option[]; industries: string[] }) {
+
+type MarketingFiltersProps = {
+  locale: Locale;
+  path: "solutions" | "scenarios";
+  q?: string;
+  category?: string;
+  industry?: string;
+  categories: Option[];
+  industries: string[];
+};
+
+function clearFilterHref(
+  path: MarketingFiltersProps["path"],
+  values: Pick<MarketingFiltersProps, "q" | "category" | "industry">,
+  omitted: "category" | "industry",
+) {
+  const query = new URLSearchParams();
+
+  if (values.q) query.set("q", values.q);
+  if (omitted !== "category" && values.category) {
+    query.set("category", values.category);
+  }
+  if (omitted !== "industry" && values.industry) {
+    query.set("industry", values.industry);
+  }
+
+  const serialized = query.toString();
+  return `/${path}${serialized ? `?${serialized}` : ""}`;
+}
+
+export function MarketingFilters({
+  locale,
+  path,
+  q,
+  category,
+  industry,
+  categories,
+  industries,
+}: MarketingFiltersProps) {
   const solution = path === "solutions";
-  return <form method="get" className="brand-panel mb-8 grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-[1.5fr_1fr_1fr_auto] xl:items-end"><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? (solution ? "搜索解决方案" : "搜索应用场景") : (solution ? "Search solutions" : "Search scenarios")}<span className="mt-2 flex items-center gap-2 rounded-lg border border-brand-border px-3"><Search size={16} className="text-brand-teal" /><input name="q" defaultValue={q} placeholder={locale === "zh" ? "输入标题关键词" : "Search by title"} className="min-w-0 flex-1 bg-transparent py-2.5 outline-none" /></span></label><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? "分类" : "Category"}<select name="category" defaultValue={category} className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2.5 font-normal"><option value="">{locale === "zh" ? "全部分类" : "All categories"}</option>{categories.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label><label className="block text-sm font-semibold text-brand-ink">{locale === "zh" ? "行业" : "Industry"}<select name="industry" defaultValue={industry} className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2.5 font-normal"><option value="">{locale === "zh" ? "全部行业" : "All industries"}</option>{industries.map((value) => <option key={value} value={value}>{value}</option>)}</select></label><div className="flex gap-2"><button type="submit" className="brand-button-primary"><Search size={16} />{locale === "zh" ? "筛选" : "Filter"}</button>{q || category || industry ? <Link href={localizedHref(locale, `/${path}`)} className="brand-button border border-brand-border"><X size={16} />{locale === "zh" ? "清除" : "Clear"}</Link> : null}</div></form>;
+  const listingLocale = locale === "zh" ? "zh" : "en";
+  const activeFilters: ActiveFilter[] = [];
+
+  if (category) {
+    activeFilters.push({
+      name: "category",
+      label: categories.find((option) => option.value === category)?.label ?? category,
+      clearHref: clearFilterHref(path, { q, category, industry }, "category"),
+    });
+  }
+
+  if (industry) {
+    activeFilters.push({
+      name: "industry",
+      label: industry,
+      clearHref: clearFilterHref(path, { q, category, industry }, "industry"),
+    });
+  }
+
+  return (
+    <ListingFilterPanel
+      locale={listingLocale}
+      search={{
+        name: "q",
+        value: q,
+        label:
+          locale === "zh"
+            ? solution
+              ? "搜索解决方案"
+              : "搜索应用场景"
+            : solution
+              ? "Search solutions"
+              : "Search scenarios",
+        placeholder: locale === "zh" ? "输入标题关键词" : "Search by title",
+      }}
+      primaryFields={[
+        {
+          name: "category",
+          label: locale === "zh" ? "分类" : "Category",
+          value: category,
+          allLabel: locale === "zh" ? "全部分类" : "All categories",
+          options: categories,
+        },
+        {
+          name: "industry",
+          label: locale === "zh" ? "行业" : "Industry",
+          value: industry,
+          allLabel: locale === "zh" ? "全部行业" : "All industries",
+          options: industries.map((value) => ({ value, label: value })),
+        },
+      ]}
+      activeFilters={activeFilters}
+      resetHref={`/${path}`}
+    />
+  );
 }
