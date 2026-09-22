@@ -122,7 +122,7 @@ export default async function ProductsPage({
                     ? `搜索“${searchTerm}”`
                     : `Results for “${searchTerm}”`
                   : locale === "zh"
-                    ? "探索我们的解决方案"
+                    ? "探索我们的产品"
                     : "Explore our solutions"
               }
               count={products.length}
