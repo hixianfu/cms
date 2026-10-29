@@ -6,7 +6,8 @@ import { ProductImageGallery } from "@/components/products/ProductImageGallery";
 import { ProductTabs } from "@/components/products/ProductTabs";
 import { ProductSpecifications } from "@/components/products/ProductSpecifications";
 import { RelatedProductsCarousel } from "@/components/products/RelatedProductsCarousel";
-import { getArticles, getProductBySlug, getRelatedProducts } from "@/lib/strapi/queries";
+import { ProductRelatedContent } from "@/components/products/ProductRelatedContent";
+import { getProductBySlug, getProductRelatedContent, getRelatedProducts } from "@/lib/strapi/queries";
 import { isLocale } from "@/lib/i18n/config";
 import { createMetadata } from "@/lib/seo/metadata";
 import { localizedHref } from "@/lib/i18n/routing";
@@ -23,11 +24,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!isLocale(locale)) notFound();
   const product = await getProductBySlug(slug, locale);
   if (!product) notFound();
-  const [related, articles] = await Promise.all([
+  const [related, relatedContent] = await Promise.all([
     getRelatedProducts(product.category?.slug, locale, product.slug),
-    getArticles(locale),
+    getProductRelatedContent(product.slug, locale),
   ]);
-  const blogs = articles.filter((article) => article.products?.some((item) => item.slug === product.slug)).slice(0, 6).map((article) => ({ title: article.title, slug: article.slug }));
+  const blogs = relatedContent.articles.slice(0, 6);
 
   const zh = locale === "zh";
   const categoryHref = product.category?.slug ? localizedHref(locale, `/products?category=${encodeURIComponent(product.category.slug)}`) : localizedHref(locale, "/products");
@@ -60,6 +61,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <div className="min-w-0 rounded-[1.75rem] border border-brand-border/80 bg-white/80 p-5 shadow-[0_18px_50px_rgba(18,50,74,0.06)] sm:p-8 lg:p-10"><ProductTabs product={product} locale={locale} blogs={blogs} /></div>
         <aside className="space-y-5 lg:sticky lg:top-24"><div className="rounded-[1.5rem] bg-brand-ink p-6 text-white shadow-[0_18px_44px_rgba(18,50,74,0.16)]"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-teal">{zh ? "专业支持" : "Expert support"}</p><h2 className="mt-3 text-xl font-semibold">{zh ? "需要产品建议？" : "Need product advice?"}</h2><p className="mt-3 text-sm leading-6 text-slate-300">{zh ? "告诉我们你的应用场景，我们会为你推荐合适的产品组合。" : "Share your application and we will recommend the right product combination."}</p><Link href={localizedHref(locale, "/contact")} className="group mt-5 inline-flex items-center gap-2 rounded-full bg-brand-lime px-4 py-2.5 text-sm font-bold text-brand-ink transition hover:bg-white">{zh ? "立即咨询" : "Start a conversation"}<ArrowUpRight size={15} className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /></Link></div></aside>
       </div>
+      <ProductRelatedContent groups={relatedContent} locale={locale} />
       <RelatedProductsCarousel products={related} locale={locale} />
     </div>
   </article>;

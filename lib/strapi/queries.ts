@@ -72,6 +72,23 @@ export async function getRelatedProducts(categorySlug?: string, locale?: Locale,
   const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, q)}&pagination[pageSize]=8&sort=sortOrder:asc`, { next: { revalidate: 120, tags: [cacheTags.products(tagLocale(locale))] } });
   return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : [];
 }
+export async function getProductRelatedContent(productSlug: string, locale: Locale) {
+  const productFilter = `filters[products][slug][$eq]=${encodeURIComponent(productSlug)}`;
+  const [solutions, scenarios, cases, articles, faqs] = await Promise.all([
+    getSolutions(locale, productFilter),
+    getScenarios(locale, productFilter),
+    getCaseStudies(locale, productFilter),
+    getArticles(locale, productFilter),
+    getFaqs(locale, productFilter),
+  ]);
+  return {
+    solutions: solutions.map(({ title, slug }) => ({ title, slug })),
+    scenarios: scenarios.map(({ title, slug }) => ({ title, slug })),
+    cases: cases.map(({ title, slug }) => ({ title, slug })),
+    articles: articles.map(({ title, slug }) => ({ title, slug })),
+    faqs: faqs.map(({ question, slug }) => ({ title: question, slug })),
+  };
+}
 export async function getArticleCategories(locale?: Locale) { const query = `?sort=name:asc${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}`; const r = await strapiFetch<Response<ArticleCategory>>(`/api/categories${query}`, { next: { revalidate: 300, tags: [cacheTags.articles(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 async function getContentCategories(path: string, locale: Locale, tag: string) { const query = `?filters[contentLocale][$eq]=${encodeURIComponent(locale)}&sort=sortOrder:asc,name:asc&pagination[pageSize]=100`; const r = await strapiFetch<Response<ContentCategory>>(`/api/${path}${query}`, { next: { revalidate: 300, tags: [tag] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 export async function getSolutionCategories(locale: Locale) { return getContentCategories("solution-categories", locale, cacheTags.solutionCategories(locale)); }
