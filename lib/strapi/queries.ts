@@ -42,11 +42,13 @@ export async function getHomePage(locale?: Locale) { const r = await strapiFetch
 export async function getProducts(locale?: Locale, query = "") { const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, query ? `&${query.replace(/^\?/, "")}` : "")}&sort=sortOrder:asc,createdAt:desc`, { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 export async function getProductCategories(locale?: Locale) {
   const options = { next: { revalidate: 300, tags: [cacheTags.products(tagLocale(locale))] } };
-  const categoryPopulate = `?populate[children]=true&filters[parent][$null]=true&${locale ? `filters[contentLocale][$eq]=${encodeURIComponent(locale)}&` : ""}sort=sortOrder:asc,name:asc`;
+  // Populate the category tree through grandchildren so the header and listing
+  // navigation can render all three configured levels.
+  const categoryPopulate = `?populate[children][populate][children]=true&filters[parent][$null]=true&${locale ? `filters[contentLocale][$eq]=${encodeURIComponent(locale)}&` : ""}sort=sortOrder:asc,name:asc`;
   const r = await strapiFetch<Response<ProductCategory>>(`/api/product-categories${categoryPopulate}`, options);
   const localized = Array.isArray(r.data) ? topLevelCategories(r.data.map((x) => unwrap(x))) : [];
   if (localized.length || !locale) return localized;
-  const fallback = await strapiFetch<Response<ProductCategory>>(`/api/product-categories?populate[children]=true&filters[parent][$null]=true&sort=sortOrder:asc,name:asc`, options);
+  const fallback = await strapiFetch<Response<ProductCategory>>(`/api/product-categories?populate[children][populate][children]=true&filters[parent][$null]=true&sort=sortOrder:asc,name:asc`, options);
   return Array.isArray(fallback.data) ? topLevelCategories(fallback.data.map((x) => unwrap(x))) : [];
 }
 async function getHeaderContent(path: string, locale: Locale, tags: string[]) {

@@ -6,13 +6,24 @@ import { ListingPageShell, ListingSection } from "@/components/listing/ListingPa
 import { ListingResultHeader } from "@/components/listing/ListingResultHeader";
 import { ListingSearchBar } from "@/components/listing/ListingSearchBar";
 import { ListingSidebar } from "@/components/listing/ListingSidebar";
+import type { ListingSidebarItem } from "@/components/listing/ListingSidebar";
 import { ProductListingCard } from "@/components/products/ProductListingCard";
-import { categoryFilterQuery, selectedCategorySlugs } from "@/lib/i18n/category-filter";
+import { categoryFilterQuery, findCategory, selectedCategorySlugs } from "@/lib/i18n/category-filter";
 import { categoryLabel } from "@/lib/i18n/category-labels";
-import { isLocale } from "@/lib/i18n/config";
+import { isLocale, type Locale } from "@/lib/i18n/config";
 import { localizedHref } from "@/lib/i18n/routing";
 import { createMetadata } from "@/lib/seo/metadata";
 import { getGlobal, getProductCategories, getProducts } from "@/lib/strapi/queries";
+import type { ProductCategory } from "@/types/content";
+
+function categoryItems(items: ProductCategory[], locale: Locale, selected?: string): ListingSidebarItem[] {
+  return items.map((item) => ({
+    href: `/products?category=${item.slug}`,
+    label: categoryLabel(item.name, locale),
+    active: selected === item.slug,
+    children: item.children?.length ? categoryItems(item.children, locale, selected) : undefined,
+  }));
+}
 
 export async function generateMetadata({
   params,
@@ -52,7 +63,7 @@ export default async function ProductsPage({
     .join("&");
   const products = await getProducts(locale, filters);
   const categoryName = category
-    ? categories.find((item) => item.slug === category)?.name
+    ? findCategory(categories, category)?.name
     : locale === "zh"
       ? "全部产品"
       : "All products";
@@ -83,16 +94,7 @@ export default async function ProductsPage({
               label: locale === "zh" ? "全部产品" : "All products",
               active: !category,
             }}
-            items={categories.map((item) => ({
-              href: `/products?category=${item.slug}`,
-              label: categoryLabel(item.name, locale),
-              active: category === item.slug,
-              children: item.children?.map((child) => ({
-                href: `/products?category=${child.slug}`,
-                label: categoryLabel(child.name, locale),
-                active: category === child.slug,
-              })),
-            }))}
+            items={categoryItems(categories, locale, category)}
           />
           <div className="min-w-0 space-y-8">
             <ListingSearchBar

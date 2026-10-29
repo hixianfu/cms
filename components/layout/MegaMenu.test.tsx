@@ -1,13 +1,18 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { MegaMenu } from "./MegaMenu";
 
 describe("MegaMenu", () => {
-  it("renders product parents and children", () => {
-    render(<MegaMenu locale="zh" menu={{ kind: "products", categories: [{ id: 1, name: "设备", slug: "machines", children: [{ id: 2, name: "气垫机", slug: "air-machines" }] }] }} />);
+  it("reveals product levels progressively on hover", () => {
+    render(<MegaMenu locale="zh" menu={{ kind: "products", categories: [{ id: 1, name: "设备", slug: "machines", children: [{ id: 2, name: "气垫机", slug: "air-machines", children: [{ id: 3, name: "Pro 气垫机", slug: "pro-air-machines" }] }] }] }} />);
     expect(screen.getByRole("link", { name: "全部产品" })).toHaveAttribute("href", "/zh/products");
     expect(screen.getByRole("link", { name: "设备" })).toHaveAttribute("href", "/zh/products?category=machines");
+    expect(screen.queryByRole("link", { name: "气垫机" })).not.toBeInTheDocument();
+    fireEvent.mouseEnter(screen.getByRole("link", { name: "设备" }));
     expect(screen.getByRole("link", { name: "气垫机" })).toHaveAttribute("href", "/zh/products?category=air-machines");
+    expect(screen.queryByRole("link", { name: "Pro 气垫机" })).not.toBeInTheDocument();
+    fireEvent.mouseEnter(screen.getByRole("link", { name: "气垫机" }));
+    expect(screen.getByRole("link", { name: "Pro 气垫机" })).toHaveAttribute("href", "/zh/products?category=pro-air-machines");
   });
 
   it("groups content by industry and links every entry", () => {
