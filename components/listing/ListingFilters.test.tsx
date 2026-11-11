@@ -119,7 +119,7 @@ describe("listing filters", () => {
     expect(screen.getAllByRole("searchbox", { name: "Search cases" })).toHaveLength(2);
   });
 
-  it("marks active sidebar links in desktop and mobile navigation", async () => {
+  it("marks active sidebar links and keeps category branches collapsed until expanded", async () => {
     const user = userEvent.setup();
 
     render(
@@ -151,10 +151,18 @@ describe("listing filters", () => {
       "page",
     );
     expect(categoryLink).toHaveAttribute("data-scroll", "false");
+    expect(within(desktop).queryByRole("link", { name: "Air systems" })).not.toBeInTheDocument();
+
+    const expandButton = within(desktop).getByRole("button", { name: "Expand Machines" });
+    expect(expandButton).toHaveAttribute("aria-expanded", "false");
+    await user.click(expandButton);
+    expect(expandButton).toHaveAttribute("aria-expanded", "true");
     expect(within(desktop).getByRole("link", { name: "Air systems" })).toHaveAttribute(
       "href",
       "/en/products?category=air",
     );
+    await user.click(within(desktop).getByRole("button", { name: "Collapse Machines" }));
+    expect(within(desktop).queryByRole("link", { name: "Air systems" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Open filters" }));
     const dialog = screen.getByRole("dialog", { name: "Product categories" });

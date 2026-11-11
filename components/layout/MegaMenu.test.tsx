@@ -15,14 +15,19 @@ describe("MegaMenu", () => {
     expect(screen.getByRole("link", { name: "Pro 气垫机" })).toHaveAttribute("href", "/zh/products?category=pro-air-machines");
   });
 
-  it("groups content by industry and links every entry", () => {
+  it("shows content groups in a product-style category navigation", () => {
     render(<MegaMenu locale="zh" menu={{ kind: "content", path: "solutions", items: [
       { id: 1, title: "电商包装", slug: "ecommerce", category: { id: 10, name: "电商", slug: "ecommerce-solutions" } },
       { id: 2, title: "仓储包装", slug: "warehouse", industry: "物流" },
     ] }} />);
+    expect(screen.getByText("悬停分类查看内容")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "电商包装" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "电商" })).toHaveAttribute("href", "/zh/solutions?category=ecommerce-solutions");
+    fireEvent.mouseEnter(screen.getByRole("link", { name: "电商" }));
     expect(screen.getByRole("link", { name: "电商包装" })).toHaveAttribute("href", "/zh/solutions/ecommerce");
+    fireEvent.mouseEnter(screen.getByRole("link", { name: "物流" }));
     expect(screen.getByRole("link", { name: "仓储包装" })).toHaveAttribute("href", "/zh/solutions/warehouse");
+    expect(screen.queryByRole("link", { name: "电商包装" })).not.toBeInTheDocument();
   });
 
   it("renders article categories and article links", () => {
@@ -30,6 +35,7 @@ describe("MegaMenu", () => {
       { id: 3, title: "Packaging guide", slug: "packaging-guide", category: { id: 11, name: "Packaging knowledge", slug: "packaging-knowledge" } },
     ] }} />);
     expect(screen.getByRole("link", { name: "Packaging knowledge" })).toHaveAttribute("href", "/en/blog?category=packaging-knowledge");
+    fireEvent.mouseEnter(screen.getByRole("link", { name: "Packaging knowledge" }));
     expect(screen.getByRole("link", { name: "Packaging guide" })).toHaveAttribute("href", "/en/blog/packaging-guide");
   });
 });

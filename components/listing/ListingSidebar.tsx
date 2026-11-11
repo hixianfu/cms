@@ -1,4 +1,8 @@
+"use client";
+
+import { useId, useState } from "react";
 import Link from "next/link";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import type { Locale } from "@/lib/i18n/config";
 import { localizedHref } from "@/lib/i18n/routing";
 import { ListingFilterDrawer } from "./ListingFilterDrawer";
@@ -17,25 +21,56 @@ type ListingSidebarProps = {
   items: ListingSidebarItem[];
 };
 
-function SidebarLink({ locale, item }: { locale: Locale; item: ListingSidebarItem }) {
+function SidebarLink({
+  locale,
+  item,
+  idPrefix,
+}: {
+  locale: Locale;
+  item: ListingSidebarItem;
+  idPrefix: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const hasChildren = Boolean(item.children?.length);
+  const childrenId = `${idPrefix}-${encodeURIComponent(item.href)}`;
+
   return (
     <li>
-      <Link
-        href={localizedHref(locale, item.href)}
-        scroll={false}
-        aria-current={item.active ? "page" : undefined}
-        className={`flex min-h-11 items-center rounded-lg px-3 py-2 text-sm transition ${
-          item.active
-            ? "bg-brand-teal/10 font-semibold text-brand-blue"
-            : "text-brand-muted hover:bg-slate-50 hover:text-brand-blue"
-        }`}
-      >
-        {item.label}
-      </Link>
-      {item.children?.length ? (
-        <ul className="ml-3 border-l border-brand-border pl-3">
-          {item.children.map((child) => (
-            <SidebarLink key={`${child.href}-${child.label}`} locale={locale} item={child} />
+      <div className="flex items-center gap-1">
+        <Link
+          href={localizedHref(locale, item.href)}
+          scroll={false}
+          aria-current={item.active ? "page" : undefined}
+          className={`flex min-h-11 min-w-0 flex-1 items-center rounded-lg px-3 py-2 text-sm transition ${
+            item.active
+              ? "bg-brand-teal/10 font-semibold text-brand-blue"
+              : "text-brand-muted hover:bg-slate-50 hover:text-brand-blue"
+          }`}
+        >
+          {item.label}
+        </Link>
+        {hasChildren ? (
+          <button
+            type="button"
+            aria-label={`${expanded ? "Collapse" : "Expand"} ${item.label}`}
+            aria-expanded={expanded}
+            aria-controls={childrenId}
+            onClick={() => setExpanded((value) => !value)}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-brand-muted transition hover:bg-slate-50 hover:text-brand-blue"
+          >
+            {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+          </button>
+        ) : null}
+      </div>
+      {hasChildren ? (
+        <ul id={childrenId} hidden={!expanded} className="ml-3 border-l border-brand-border pl-3">
+          {item.children!.map((child) => (
+            <SidebarLink
+              key={`${child.href}-${child.label}`}
+              locale={locale}
+              item={child}
+              idPrefix={idPrefix}
+            />
           ))}
         </ul>
       ) : null}
@@ -49,12 +84,19 @@ function SidebarNavigation({
   allItem,
   items,
 }: ListingSidebarProps) {
+  const idPrefix = useId();
+
   return (
     <nav aria-label={label}>
       <ul className="space-y-1">
-        <SidebarLink locale={locale} item={allItem} />
+        <SidebarLink locale={locale} item={allItem} idPrefix={idPrefix} />
         {items.map((item) => (
-          <SidebarLink key={`${item.href}-${item.label}`} locale={locale} item={item} />
+          <SidebarLink
+            key={`${item.href}-${item.label}`}
+            locale={locale}
+            item={item}
+            idPrefix={idPrefix}
+          />
         ))}
       </ul>
     </nav>
