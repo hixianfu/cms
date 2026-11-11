@@ -1,10 +1,17 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import type { ComponentProps } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ListingFilterDrawer } from "./ListingFilterDrawer";
 import { ListingFilterPanel } from "./ListingFilterPanel";
 import { ListingSearchBar } from "./ListingSearchBar";
 import { ListingSidebar } from "./ListingSidebar";
+
+vi.mock("next/link", () => ({
+  default: ({ scroll, ...props }: ComponentProps<"a"> & { scroll?: boolean }) => (
+    <a data-scroll={String(scroll)} {...props} />
+  ),
+}));
 
 afterEach(() => cleanup());
 
@@ -138,10 +145,12 @@ describe("listing filters", () => {
     );
 
     const desktop = screen.getByTestId("listing-sidebar-desktop");
-    expect(within(desktop).getByRole("link", { name: "Machines" })).toHaveAttribute(
+    const categoryLink = within(desktop).getByRole("link", { name: "Machines" });
+    expect(categoryLink).toHaveAttribute(
       "aria-current",
       "page",
     );
+    expect(categoryLink).toHaveAttribute("data-scroll", "false");
     expect(within(desktop).getByRole("link", { name: "Air systems" })).toHaveAttribute(
       "href",
       "/en/products?category=air",

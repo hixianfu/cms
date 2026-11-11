@@ -6,6 +6,7 @@ import { ListingEmptyState } from "@/components/listing/ListingEmptyState";
 import { ListingHero } from "@/components/listing/ListingHero";
 import { ListingPageShell, ListingSection } from "@/components/listing/ListingPageShell";
 import { ListingResultHeader } from "@/components/listing/ListingResultHeader";
+import { ListingSidebar } from "@/components/listing/ListingSidebar";
 import { getGlobal, getVideos } from "@/lib/strapi/queries";
 import { createMetadata } from "@/lib/seo/metadata";
 import { isLocale, type Locale } from "@/lib/i18n/config";
@@ -36,10 +37,18 @@ export default async function VideosPage({ params, searchParams }: { params: Pro
     <ListingPageShell>
       <ListingHero locale={currentLocale} variant="compact" motif="video" eyebrow={locale === "zh" ? "视频中心" : "Video center"} title={locale === "zh" ? "观看包装设备如何运转" : "See packaging equipment in action"} description={locale === "zh" ? "浏览产品介绍、操作教程、工厂展示和行业应用视频。" : "Browse product introductions, tutorials, factory tours, and industry applications."} />
       <ListingSection>
-        <div className="space-y-8">
-          <VideoFilters locale={currentLocale} q={q} category={category} product={product} categories={categories} products={products} />
-          <ListingResultHeader eyebrow={category ? videoCategoryLabel(category, currentLocale) : locale === "zh" ? "全部视频" : "All videos"} title={q ? locale === "zh" ? `搜索结果：“${q}”` : `Results for “${q}”` : locale === "zh" ? "精选视频" : "Featured videos"} count={videos.length} countLabel={locale === "zh" ? "个视频" : "videos"} />
-          {videos.length ? <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">{videos.map((video) => <VideoCard key={video.id} video={video} locale={currentLocale} />)}</div> : <ListingEmptyState message={q ? locale === "zh" ? `没有找到与“${q}”匹配的视频` : `No videos matched “${q}”` : locale === "zh" ? "没有找到匹配的视频。" : "No videos matched your filters."} resetHref={localizedHref(currentLocale, "/videos")} resetLabel={locale === "zh" ? "查看全部视频" : "View all videos"} />}
+        <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
+          <ListingSidebar
+            locale={currentLocale}
+            label={locale === "zh" ? "视频分类" : "Video categories"}
+            allItem={{ href: "/videos", label: locale === "zh" ? "全部视频" : "All videos", active: !category }}
+            items={categories.map((item) => ({ href: `/videos?${new URLSearchParams({ ...(q ? { q } : {}), ...(product ? { product } : {}), category: item.value }).toString()}`, label: item.label, active: category === item.value }))}
+          />
+          <div className="min-w-0 space-y-8">
+            <VideoFilters locale={currentLocale} q={q} category={category} product={product} categories={categories} products={products} showCategory={false} />
+            <ListingResultHeader eyebrow={category ? videoCategoryLabel(category, currentLocale) : locale === "zh" ? "全部视频" : "All videos"} title={q ? locale === "zh" ? `搜索结果：“${q}”` : `Results for “${q}”` : locale === "zh" ? "精选视频" : "Featured videos"} count={videos.length} countLabel={locale === "zh" ? "个视频" : "videos"} />
+            {videos.length ? <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">{videos.map((video) => <VideoCard key={video.id} video={video} locale={currentLocale} />)}</div> : <ListingEmptyState message={q ? locale === "zh" ? `没有找到与“${q}”匹配的视频` : `No videos matched “${q}”` : locale === "zh" ? "没有找到匹配的视频。" : "No videos matched your filters."} resetHref={localizedHref(currentLocale, "/videos")} resetLabel={locale === "zh" ? "查看全部视频" : "View all videos"} />}
+          </div>
         </div>
       </ListingSection>
     </ListingPageShell>

@@ -67,9 +67,6 @@ export default async function ProductsPage({
     : locale === "zh"
       ? "全部产品"
       : "All products";
-  const featuredProduct = products.length <= 2 ? products[0] : undefined;
-  const remainingProducts = featuredProduct ? products.slice(1) : products;
-
   return (
     <ListingPageShell>
       <ListingHero
@@ -131,27 +128,14 @@ export default async function ProductsPage({
               countLabel={locale === "zh" ? "个产品" : "products"}
             />
             {products.length ? (
-              <div>
-                {featuredProduct ? (
+              <div className="grid gap-7 sm:grid-cols-2 xl:grid-cols-3">
+                {products.map((product) => (
                   <ProductListingCard
+                    key={product.id}
                     locale={locale}
-                    product={featuredProduct}
-                    featured
+                    product={product}
                   />
-                ) : null}
-                {remainingProducts.length ? (
-                  <div
-                    className={`grid gap-7 sm:grid-cols-2 ${featuredProduct ? "mt-7" : ""}`}
-                  >
-                    {remainingProducts.map((product) => (
-                      <ProductListingCard
-                        key={product.id}
-                        locale={locale}
-                        product={product}
-                      />
-                    ))}
-                  </div>
-                ) : null}
+                ))}
               </div>
             ) : (
               <ListingEmptyState

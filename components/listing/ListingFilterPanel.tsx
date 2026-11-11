@@ -34,6 +34,7 @@ type ListingFilterPanelProps = {
   secondaryFields?: FilterField[];
   activeFilters: ActiveFilter[];
   resetHref: string;
+  preservedValues?: Record<string, string | undefined>;
 };
 
 function SearchField({ search }: { search: ListingFilterSearch }) {
@@ -127,6 +128,7 @@ function DesktopFilterForm({
   secondaryFields,
   activeFilters,
   resetHref,
+  preservedValues,
 }: ListingFilterPanelProps) {
   const isChinese = locale === "zh";
 
@@ -136,6 +138,9 @@ function DesktopFilterForm({
       className="hidden rounded-2xl border border-brand-border bg-white p-5 shadow-sm lg:block"
     >
       <form method="get">
+        {Object.entries(preservedValues ?? {}).map(([name, value]) => value ? (
+          <input key={name} type="hidden" name={name} value={value} />
+        ) : null)}
         <div className="grid gap-4 xl:grid-cols-[minmax(16rem,1.5fr)_repeat(2,minmax(10rem,1fr))_auto] xl:items-end">
           <SearchField search={search} />
           {primaryFields.map((field) => (
@@ -162,7 +167,7 @@ function DesktopFilterForm({
 }
 
 export function ListingFilterPanel(props: ListingFilterPanelProps) {
-  const { locale, search, primaryFields, secondaryFields = [], activeFilters, resetHref } =
+  const { locale, search, primaryFields, secondaryFields = [], activeFilters, resetHref, preservedValues } =
     props;
 
   return (
@@ -170,6 +175,9 @@ export function ListingFilterPanel(props: ListingFilterPanelProps) {
       <DesktopFilterForm {...props} secondaryFields={secondaryFields} />
       <ListingFilterDrawer locale={locale} title={locale === "zh" ? "筛选" : "Filters"}>
         <form method="get" className="space-y-4">
+          {Object.entries(preservedValues ?? {}).map(([name, value]) => value ? (
+            <input key={name} type="hidden" name={name} value={value} />
+          ) : null)}
           <SearchField search={search} />
           {[...primaryFields, ...secondaryFields].map((field) => (
             <SelectField key={field.name} field={field} />

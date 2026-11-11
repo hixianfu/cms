@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { VideoCard } from "./VideoCard";
 import { VideoFilters } from "./VideoFilters";
@@ -68,5 +68,24 @@ describe("video listing", () => {
     rerender(<VideoFilters locale="zh" q="机器" categories={[]} products={[]} />);
 
     expect(screen.getByRole("link", { name: "移除搜索：机器筛选" })).toBeInTheDocument();
+  });
+
+  it("keeps the selected sidebar category in the remaining filters form", () => {
+    render(
+      <VideoFilters
+        locale="zh"
+        category="operation"
+        products={[{ value: "air-machine", label: "气垫机" }]}
+        categories={[{ value: "operation", label: "产品操作" }]}
+        showCategory={false}
+      />,
+    );
+
+    expect(screen.getByDisplayValue("operation")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "视频分类" })).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "关联产品" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "打开筛选" }));
+    expect(screen.getAllByDisplayValue("operation")).toHaveLength(2);
+    expect(screen.getAllByRole("combobox", { name: "关联产品" })).toHaveLength(2);
   });
 });

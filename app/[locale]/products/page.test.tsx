@@ -31,14 +31,7 @@ describe("ProductsPage listing composition", () => {
     vi.clearAllMocks();
   });
 
-  it.each([
-    { count: 1, featuredCount: 1 },
-    { count: 2, featuredCount: 1 },
-    { count: 3, featuredCount: 0 },
-  ])("features only the first product for a $count-item result set", async ({
-    count,
-    featuredCount,
-  }) => {
+  it.each([1, 2, 3])("renders all $count products in the same grid", async (count) => {
     vi.mocked(getProducts).mockResolvedValue(
       Array.from({ length: count }, (_, index) => product(index + 1)),
     );
@@ -55,14 +48,8 @@ describe("ProductsPage listing composition", () => {
       "immersive",
     );
     expect(view.container.querySelectorAll("article")).toHaveLength(count);
-    expect(
-      view.container.querySelectorAll('[data-featured="true"]'),
-    ).toHaveLength(featuredCount);
-    if (featuredCount) {
-      expect(view.container.querySelector("article")).toHaveAttribute(
-        "data-featured",
-        "true",
-      );
-    }
+    expect(view.container.querySelector("[class*='xl:grid-cols-3']"))
+      .toBeInTheDocument();
+    expect(view.container.querySelectorAll('[data-featured="true"]')).toHaveLength(0);
   });
 });

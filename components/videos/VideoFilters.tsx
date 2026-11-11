@@ -11,13 +11,13 @@ function queryHref(values: Record<string, string | undefined>) {
   return query ? `/videos?${query}` : "/videos";
 }
 
-export function VideoFilters({ locale, q, category, product, categories, products }: { locale: Locale; q?: string; category?: string; product?: string; categories: Option[]; products: Option[] }) {
+export function VideoFilters({ locale, q, category, product, categories, products, showCategory = true }: { locale: Locale; q?: string; category?: string; product?: string; categories: Option[]; products: Option[]; showCategory?: boolean }) {
   const values = { q, category, product };
   const labelFor = (name: string, value: string | undefined) =>
     value ? ({ category: categories, product: products }[name] ?? []).find((option) => option.value === value)?.label ?? value : "";
   const activeFilters: ActiveFilter[] = ([
     ["q", q, q ? (locale === "zh" ? `搜索：${q}` : `Search: ${q}`) : ""],
-    ["category", category, labelFor("category", category)],
+    ...(showCategory ? [["category", category, labelFor("category", category)] as const] : []),
     ["product", product, labelFor("product", product)],
   ] as Array<[string, string | undefined, string]>)
     .filter(([, value]) => value)
@@ -26,13 +26,13 @@ export function VideoFilters({ locale, q, category, product, categories, product
       label,
       clearHref: queryHref(Object.fromEntries(Object.entries(values).filter(([key]) => key !== name))),
     }));
-  const primaryFields: FilterField[] = [{
-    name: "category",
-    label: locale === "zh" ? "视频分类" : "Category",
-    value: category,
-    allLabel: locale === "zh" ? "全部分类" : "All categories",
-    options: categories,
-  }];
+  const primaryFields: FilterField[] = showCategory ? [{
+      name: "category",
+      label: locale === "zh" ? "视频分类" : "Category",
+      value: category,
+      allLabel: locale === "zh" ? "全部分类" : "All categories",
+      options: categories,
+    }] : [];
   const secondaryFields: FilterField[] = [{
     name: "product",
     label: locale === "zh" ? "关联产品" : "Product",
@@ -54,6 +54,7 @@ export function VideoFilters({ locale, q, category, product, categories, product
       secondaryFields={secondaryFields}
       activeFilters={activeFilters}
       resetHref="/videos"
+      preservedValues={showCategory ? {} : { category }}
     />
   );
 }

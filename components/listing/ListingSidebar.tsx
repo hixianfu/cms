@@ -22,6 +22,7 @@ function SidebarLink({ locale, item }: { locale: Locale; item: ListingSidebarIte
     <li>
       <Link
         href={localizedHref(locale, item.href)}
+        scroll={false}
         aria-current={item.active ? "page" : undefined}
         className={`flex min-h-11 items-center rounded-lg px-3 py-2 text-sm transition ${
           item.active
