@@ -31,6 +31,7 @@ export function ListingHero({
   title,
   description,
   stat,
+  backgroundImage,
 }: {
   locale: Locale;
   variant: ListingHeroVariant;
@@ -39,6 +40,7 @@ export function ListingHero({
   title: string;
   description: string;
   stat?: { value: string | number; label: string };
+  backgroundImage?: string | null;
 }) {
   const isChinese = locale === "zh";
   const minHeightClass =
@@ -53,6 +55,15 @@ export function ListingHero({
       data-testid="listing-hero"
       data-variant={variant}
     >
+      {backgroundImage ? (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          data-testid="listing-hero-background"
+          style={{ backgroundImage: `url("${backgroundImage.replaceAll('"', "%22")}")` }}
+        />
+      ) : null}
+      {backgroundImage ? <div aria-hidden="true" className="absolute inset-0 bg-brand-ink/65" /> : null}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"

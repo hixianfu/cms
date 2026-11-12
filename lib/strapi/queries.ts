@@ -2,6 +2,7 @@ import { strapiFetch } from "./client";
 import { cacheTags } from "./revalidate";
 import type { About, Article, ArticleCategory, CaseStudy, ContactPage, ContentCategory, Faq, Global, HeaderContentItem, HeaderMegaMenuData, HomePage, Locale, Product, ProductCategory, Scenario, Solution, Video } from "@/types/content";
 import { topLevelCategories } from "./category-utils";
+import { parsePage, type Pagination } from "@/lib/listing-pagination";
 
 type Entity<T> = { id?: number | string; documentId?: string; attributes?: T } & T;
 type Response<T> = { data: Entity<T> | Entity<T>[] | null };
@@ -33,13 +34,23 @@ const params = (locale?: Locale, extra = "") => `?populate=*${locale ? `&locale=
 const collectionParams = (locale?: Locale, extra = "") => `?populate=*${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}${extra}`;
 
 const tagLocale = (locale?: Locale) => locale ?? "zh";
-export async function getGlobal(locale?: Locale) { const query = `?populate[logo]=true&populate[favicon]=true&populate[footerQrCode]=true&populate[navigation]=true&populate[footerLinks]=true&populate[socialLinks]=true&populate[defaultSeo][populate]=shareImage${locale ? `&locale=${encodeURIComponent(locale)}` : ""}`; const r = await strapiFetch<Response<Global>>(`/api/global${query}`, { next: { revalidate: 60, tags: [cacheTags.global(tagLocale(locale))] } }); return r.data ? mapNavigation(unwrap(r.data as Entity<Global>)) : null; }
+export async function getGlobal(locale?: Locale) { const query = `?populate[logo]=true&populate[favicon]=true&populate[footerQrCode]=true&populate[navigation][populate][listingBackground]=true&populate[footerLinks]=true&populate[socialLinks]=true&populate[defaultSeo][populate]=shareImage${locale ? `&locale=${encodeURIComponent(locale)}` : ""}`; const r = await strapiFetch<Response<Global>>(`/api/global${query}`, { next: { revalidate: 60, tags: [cacheTags.global(tagLocale(locale))] } }); return r.data ? mapNavigation(unwrap(r.data as Entity<Global>)) : null; }
 // Strapi does not recursively populate media nested inside repeatable
 // components with `populate=*`. Explicitly populate the hero slide media
 // (and other homepage media) so the carousel receives a usable URL.
 const homePageParams = (locale?: Locale) => `?populate[cta][populate]=image&populate[sections][on][shared.home-hero][populate][slides][populate][image]=true&populate[sections][on][shared.home-hero][populate][slides][populate][video]=true&populate[sections][on][shared.home-products][populate][products][populate]=*&populate[sections][on][shared.home-products][populate][categories][populate][category]=true&populate[sections][on][shared.home-products][populate][categories][populate][products][populate]=*&populate[sections][on][shared.home-articles][populate][articles][populate]=*&populate[sections][on][shared.home-article-showcase][populate][groups][populate][category]=true&populate[sections][on][shared.home-article-showcase][populate][groups][populate][articles][populate][cover]=true&populate[sections][on][shared.home-article-showcase][populate][groups][populate][articles][populate][author]=true&populate[sections][on][shared.home-article-showcase][populate][groups][populate][articles][populate][category]=true&populate[sections][on][shared.home-partners][populate][partners][populate][image]=true&populate[sections][on][shared.home-why-choose-us][populate][image]=true&populate[sections][on][shared.home-why-choose-us][populate][advantages][populate][icon]=true&populate[sections][on][shared.home-solutions][populate][backgroundImage]=true&populate[sections][on][shared.home-solutions][populate][solutions][populate]=*&populate[sections][on][shared.home-solutions][populate][entries][populate][category]=true&populate[sections][on][shared.home-solutions][populate][entries][populate][backgroundImage]=true&populate[sections][on][shared.home-solutions][populate][entries][populate][solutions][populate][cover]=true&populate[sections][on][shared.home-scenarios][populate][scenarios][populate]=*&populate[sections][on][shared.home-cases][populate][cases][populate]=*&populate[sections][on][shared.home-videos][populate][videos][populate]=*&populate[sections][on][shared.home-faqs][populate][faqs][populate]=*&populate[sections][on][shared.home-feature-cards][populate][cards][populate]=*&populate[sections][on][shared.home-company-showcase][populate][backgroundImage]=true&populate[sections][on][shared.home-company-showcase][populate][article][fields][0]=title&populate[sections][on][shared.home-company-showcase][populate][article][fields][1]=slug&populate[sections][on][shared.home-company-showcase][populate][highlights]=true&populate[seo][populate]=shareImage${locale ? `&locale=${encodeURIComponent(locale)}` : ""}`;
 export async function getHomePage(locale?: Locale) { const r = await strapiFetch<Response<HomePage>>(`/api/home-page${homePageParams(locale)}`, { next: { revalidate: 120, tags: [cacheTags.homePage(tagLocale(locale))] } }); return r.data ? unwrap(r.data as Entity<HomePage>) : null; }
 export async function getProducts(locale?: Locale, query = "") { const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, query ? `&${query.replace(/^\?/, "")}` : "")}&sort=sortOrder:asc,createdAt:desc`, { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
+export async function getProductPage(locale: Locale, query = "", page = 1, pageSize = 12) {
+  const currentPage = parsePage(String(page));
+  const size = Number.isSafeInteger(pageSize) && pageSize > 0 ? Math.min(pageSize, 100) : 12;
+  const paginationQuery = `&pagination[page]=${currentPage}&pagination[pageSize]=${size}&pagination[withCount]=true`;
+  const r = await strapiFetch<Response<Product> & { meta: { pagination: Pagination } }>(
+    `/api/products${collectionParams(locale, query ? `&${query.replace(/^\?/, "")}` : "")}${paginationQuery}&sort=sortOrder:asc,createdAt:desc,id:asc`,
+    { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale))] } },
+  );
+  return { products: Array.isArray(r.data) ? r.data.map((item) => unwrap(item)) : [], pagination: r.meta.pagination };
+}
 export async function getProductCategories(locale?: Locale) {
   const options = { next: { revalidate: 300, tags: [cacheTags.products(tagLocale(locale))] } };
   // Populate the category tree through grandchildren so the header and listing
@@ -52,20 +63,33 @@ export async function getProductCategories(locale?: Locale) {
   return Array.isArray(fallback.data) ? topLevelCategories(fallback.data.map((x) => unwrap(x))) : [];
 }
 async function getHeaderContent(path: string, locale: Locale, tags: string[]) {
-  const fields = path === "articles" ? "fields[0]=title&fields[1]=slug" : "fields[0]=title&fields[1]=slug&fields[2]=industry";
-  const sort = path === "articles" ? "title:asc" : "sortOrder:asc,title:asc";
+  const isFaq = path === "faqs";
+  const isVideo = path === "videos";
+  const isArticle = path === "articles";
+  const fields = isFaq ? "fields[0]=question&fields[1]=slug" : isVideo || isArticle ? "fields[0]=title&fields[1]=slug" : "fields[0]=title&fields[1]=slug&fields[2]=industry";
+  // FAQ entries use `question` instead of `title`; sorting by a missing
+  // attribute makes Strapi reject the whole navigation request.
+  const sort = isArticle ? "title:asc" : isFaq ? "sortOrder:asc" : "sortOrder:asc,title:asc";
   const query = `?${fields}&populate[category][fields][0]=name&populate[category][fields][1]=slug&filters[contentLocale][$eq]=${encodeURIComponent(locale)}&pagination[pageSize]=100&sort=${sort}`;
   const r = await strapiFetch<Response<HeaderContentItem>>(`/api/${path}${query}`, { next: { revalidate: 300, tags } });
-  return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : [];
+  return Array.isArray(r.data) ? r.data.map((x) => {
+    const item = unwrap(x) as HeaderContentItem & { question?: string; category?: ContentCategory | string | null };
+    if (isFaq) return { ...item, title: item.question ?? item.title };
+    return item;
+  }) : [];
 }
 export async function getHeaderMegaMenu(locale: Locale): Promise<HeaderMegaMenuData> {
-  const [solutions, scenarios, cases, articles] = await Promise.all([
+  const [solutions, scenarios, cases, articles, videos, faqs, videoCategories, faqCategories] = await Promise.all([
     getHeaderContent("solutions", locale, [cacheTags.solutions(locale), cacheTags.solutionCategories(locale)]),
     getHeaderContent("scenarios", locale, [cacheTags.scenarios(locale), cacheTags.scenarioCategories(locale)]),
     getHeaderContent("case-studies", locale, [cacheTags.cases(locale), cacheTags.caseCategories(locale)]),
     getHeaderContent("articles", locale, [cacheTags.articles(locale)]),
+    getHeaderContent("videos", locale, [cacheTags.videos(locale)]),
+    getHeaderContent("faqs", locale, [cacheTags.faqs(locale)]),
+    getVideoCategories(locale),
+    getFaqCategories(locale),
   ]);
-  return { solutions, scenarios, cases, articles };
+  return { solutions, scenarios, cases, articles, videos, faqs, videoCategories, faqCategories };
 }
 export async function getProductBySlug(slug: string, locale?: Locale) { const q = `&filters[slug][$eq]=${encodeURIComponent(slug)}&populate[cover]=true&populate[category]=true&populate[gallery]=true&populate[videos]=true&populate[productVideos][populate]=video&populate[specifications]=true&populate[blocks][populate]=*&populate[articles]=true`; const r = await strapiFetch<Response<Product>>(`/api/products${collectionParams(locale, q)}`, { next: { revalidate: 60, tags: [cacheTags.products(tagLocale(locale)), cacheTags.product(tagLocale(locale), slug)] } }); const item = Array.isArray(r.data) ? r.data[0] : r.data; return item ? unwrap(item) : null; }
 export async function getRelatedProducts(categorySlug?: string, locale?: Locale, excludeSlug?: string) {
@@ -96,10 +120,12 @@ async function getContentCategories(path: string, locale: Locale, tag: string) {
 export async function getSolutionCategories(locale: Locale) { return getContentCategories("solution-categories", locale, cacheTags.solutionCategories(locale)); }
 export async function getScenarioCategories(locale: Locale) { return getContentCategories("scenario-categories", locale, cacheTags.scenarioCategories(locale)); }
 export async function getCaseCategories(locale: Locale) { return getContentCategories("case-categories", locale, cacheTags.caseCategories(locale)); }
+export async function getVideoCategories(locale: Locale) { return getContentCategories("video-categories", locale, cacheTags.videos(locale)); }
+export async function getFaqCategories(locale: Locale) { return getContentCategories("faq-categories", locale, cacheTags.faqs(locale)); }
 const articlePopulate = "populate[cover]=true&populate[author]=true&populate[category]=true&populate[products]=true&populate[solutions]=true&populate[scenarios]=true&populate[cases]=true&populate[videos]=true&populate[faqs]=true";
 export async function getArticles(locale?: Locale, query = "") { const params = `?${articlePopulate}${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}${query ? `&${query.replace(/^\?/, "")}` : ""}&sort=publishedAt:desc`; const r = await strapiFetch<Response<Article>>(`/api/articles${params}`, { next: { revalidate: 60, tags: [cacheTags.articles(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 export async function getArticleBySlug(slug: string, locale?: Locale) { const query = `?filters[slug][$eq]=${encodeURIComponent(slug)}${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}&${articlePopulate}&populate[blocks][populate]=*`; const r = await strapiFetch<Response<Article>>(`/api/articles${query}`, { next: { revalidate: 60, tags: [cacheTags.articles(tagLocale(locale)), cacheTags.article(tagLocale(locale), slug)] } }); const item = Array.isArray(r.data) ? r.data[0] : r.data; return item ? unwrap(item) : null; }
-const faqPopulate = "populate[products]=true&populate[solutions]=true&populate[seo][populate]=shareImage";
+const faqPopulate = "populate[category]=true&populate[products]=true&populate[solutions]=true&populate[seo][populate]=shareImage";
 export async function getFaqs(locale?: Locale, query = "") { const q = `?${faqPopulate}${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}${query ? `&${query.replace(/^\?/, "")}` : ""}&sort=featured:desc,sortOrder:asc,createdAt:desc`; const r = await strapiFetch<Response<Faq>>(`/api/faqs${q}`, { next: { revalidate: 60, tags: [cacheTags.faqs(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 export async function getFaqBySlug(slug: string, locale?: Locale) { const q = `?${faqPopulate}&filters[slug][$eq]=${encodeURIComponent(slug)}${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}`; const r = await strapiFetch<Response<Faq>>(`/api/faqs${q}`, { next: { revalidate: 60, tags: [cacheTags.faqs(tagLocale(locale)), cacheTags.faq(tagLocale(locale), slug)] } }); const item = Array.isArray(r.data) ? r.data[0] : r.data; return item ? unwrap(item) : null; }
 const solutionPopulate = "populate[cover]=true&populate[category]=true&populate[products]=true&populate[scenarios]=true&populate[cases]=true&populate[videos]=true&populate[articles]=true";
@@ -111,7 +137,7 @@ export async function getScenarioBySlug(slug: string, locale?: Locale) { const q
 const casePopulate = "populate[cover]=true&populate[gallery]=true&populate[category]=true&populate[products]=true&populate[solutions]=true&populate[scenarios]=true&populate[videos]=true&populate[articles]=true&populate[seo][populate]=shareImage";
 export async function getCaseStudies(locale?: Locale, query = "") { const q = `${casePopulate}${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}${query ? `&${query.replace(/^\?/, "")}` : ""}&sort=featured:desc,sortOrder:asc,createdAt:desc`; const r = await strapiFetch<Response<CaseStudy>>(`/api/case-studies?${q}`, { next: { revalidate: 60, tags: [cacheTags.cases(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 export async function getCaseStudyBySlug(slug: string, locale?: Locale) { const q = `${casePopulate}&filters[slug][$eq]=${encodeURIComponent(slug)}${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}`; const r = await strapiFetch<Response<CaseStudy>>(`/api/case-studies?${q}`, { next: { revalidate: 60, tags: [cacheTags.cases(tagLocale(locale)), cacheTags.caseStudy(tagLocale(locale), slug)] } }); const item = Array.isArray(r.data) ? r.data[0] : r.data; return item ? unwrap(item) : null; }
-const videoPopulate = "populate[cover]=true&populate[file]=true&populate[products]=true&populate[solutions]=true&populate[scenarios]=true&populate[cases]=true&populate[articles]=true&populate[seo][populate]=shareImage";
+const videoPopulate = "populate[category]=true&populate[cover]=true&populate[file]=true&populate[products]=true&populate[solutions]=true&populate[scenarios]=true&populate[cases]=true&populate[articles]=true&populate[seo][populate]=shareImage";
 export async function getVideos(locale?: Locale, query = "") { const q = `${videoPopulate}${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}${query ? `&${query.replace(/^\?/, "")}` : ""}&sort=featured:desc,sortOrder:asc,createdAt:desc`; const r = await strapiFetch<Response<Video>>(`/api/videos?${q}`, { next: { revalidate: 60, tags: [cacheTags.videos(tagLocale(locale))] } }); return Array.isArray(r.data) ? r.data.map((x) => unwrap(x)) : []; }
 export async function getVideoBySlug(slug: string, locale?: Locale) { const q = `${videoPopulate}&filters[slug][$eq]=${encodeURIComponent(slug)}${locale ? `&filters[contentLocale][$eq]=${encodeURIComponent(locale)}` : ""}`; const r = await strapiFetch<Response<Video>>(`/api/videos?${q}`, { next: { revalidate: 60, tags: [cacheTags.videos(tagLocale(locale)), cacheTags.video(tagLocale(locale), slug)] } }); const item = Array.isArray(r.data) ? r.data[0] : r.data; return item ? unwrap(item) : null; }
 export async function getAbout(locale?: Locale) { const r = await strapiFetch<Response<About>>(`/api/abouts${collectionParams(locale)}`, { next: { revalidate: 300, tags: [cacheTags.about(tagLocale(locale))] } }); const item = Array.isArray(r.data) ? r.data[0] : r.data; return item ? unwrap(item) : null; }

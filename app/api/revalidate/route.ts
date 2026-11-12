@@ -33,6 +33,8 @@ export async function POST(request: Request) {
     else if (event.model === "case-study" || event.model === "caseStudy" || event.model === "case_study") { revalidateTag(cacheTags.cases(target), "max"); if (event.entry?.slug) revalidateTag(cacheTags.caseStudy(target, event.entry.slug), "max"); }
     else if (event.model === "case-category") { revalidateTag(cacheTags.caseCategories(target), "max"); revalidateTag(cacheTags.cases(target), "max"); }
     else if (event.model === "video" || event.model === "videos") { revalidateTag(cacheTags.videos(target), "max"); if (event.entry?.slug) revalidateTag(cacheTags.video(target, event.entry.slug), "max"); }
+    else if (event.model === "video-category") { revalidateTag(cacheTags.videos(target), "max"); revalidateTag(cacheTags.global(target), "max"); }
+    else if (event.model === "faq-category") { revalidateTag(cacheTags.faqs(target), "max"); revalidateTag(cacheTags.global(target), "max"); }
     else if (event.model === "faq" || event.model === "faqs") { revalidateTag(cacheTags.faqs(target), "max"); if (event.entry?.slug) revalidateTag(cacheTags.faq(target, event.entry.slug), "max"); }
   }
   return NextResponse.json({ revalidated: true, locales: targetLocales });

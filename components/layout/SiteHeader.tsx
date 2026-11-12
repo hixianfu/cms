@@ -62,6 +62,8 @@ export function SiteHeader({ locale, global, categories = [], megaMenu }: Props)
     if (path === "/scenarios" && megaMenu.scenarios.length) return { kind: "content" as const, path: "scenarios" as const, items: megaMenu.scenarios };
     if (path === "/cases" && megaMenu.cases.length) return { kind: "content" as const, path: "cases" as const, items: megaMenu.cases };
     if (path === "/blog" && megaMenu.articles.length) return { kind: "content" as const, path: "blog" as const, items: megaMenu.articles };
+    if (path === "/videos" && (megaMenu.videoCategories?.length || megaMenu.videos?.length)) return { kind: "content" as const, path: "videos" as const, items: megaMenu.videos ?? [], categories: megaMenu.videoCategories };
+    if (path === "/faq" && (megaMenu.faqCategories?.length || megaMenu.faqs?.length)) return { kind: "content" as const, path: "faq" as const, items: megaMenu.faqs ?? [], categories: megaMenu.faqCategories };
     return null;
   };
 

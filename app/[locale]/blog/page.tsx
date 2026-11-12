@@ -14,6 +14,7 @@ import { ListingSidebar } from "@/components/listing/ListingSidebar";
 import { isLocale } from "@/lib/i18n/config";
 import { localizedHref } from "@/lib/i18n/routing";
 import { createMetadata } from "@/lib/seo/metadata";
+import { resolveListingBackground } from "@/lib/strapi/image";
 import { getArticleCategories, getArticles, getGlobal } from "@/lib/strapi/queries";
 
 export async function generateMetadata({
@@ -41,6 +42,7 @@ export default async function BlogPage({
   if (!isLocale(locale)) notFound();
 
   const { category, search } = await searchParams;
+  const global = await getGlobal(locale);
   const searchTerm = search?.trim() ?? "";
   const categories = (await getArticleCategories(locale)).filter((item) =>
     isKnownArticleCategory(item.slug),
@@ -67,6 +69,7 @@ export default async function BlogPage({
         locale={locale}
         variant="compact"
         motif="article"
+        backgroundImage={resolveListingBackground(global, "/blog")}
         eyebrow={locale === "zh" ? "知识与洞察" : "Knowledge & insight"}
         title={locale === "zh" ? "来自现场的洞察" : "Insights from the field"}
         description={

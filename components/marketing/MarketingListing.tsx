@@ -18,6 +18,7 @@ export function MarketingListing({
   q,
   category,
   industry,
+  backgroundImage,
 }: {
   locale: Locale;
   kind: Kind;
@@ -27,6 +28,7 @@ export function MarketingListing({
   q?: string;
   category?: string;
   industry?: string;
+  backgroundImage?: string | null;
 }) {
   const solution = kind === "solutions";
   const listingLocale = locale === "zh" ? "zh" : "en";
@@ -87,6 +89,7 @@ export function MarketingListing({
         locale={listingLocale}
         variant={solution ? "immersive" : "compact"}
         motif={solution ? "solution" : "scenario"}
+        backgroundImage={backgroundImage}
         eyebrow={copy.eyebrow}
         title={copy.title}
         description={copy.description}

@@ -10,6 +10,7 @@ import { getCaseCategories, getCaseStudies, getGlobal } from "@/lib/strapi/queri
 import { createMetadata } from "@/lib/seo/metadata";
 import { isLocale } from "@/lib/i18n/config";
 import { localizedHref } from "@/lib/i18n/routing";
+import { resolveListingBackground } from "@/lib/strapi/image";
 
 type Params = { locale: string };
 type Search = { q?: string; category?: string; industry?: string; product?: string; scenario?: string };
@@ -34,7 +35,7 @@ export default async function CasesPage({ params, searchParams }: { params: Prom
     product ? `filters[products][slug][$eq]=${encodeURIComponent(product)}` : "",
     scenario ? `filters[scenarios][slug][$eq]=${encodeURIComponent(scenario)}` : "",
   ].filter(Boolean).join("&");
-  const [cases, allCases, caseCategories] = await Promise.all([getCaseStudies(locale, query), getCaseStudies(locale), getCaseCategories(locale)]);
+  const [cases, allCases, caseCategories, global] = await Promise.all([getCaseStudies(locale, query), getCaseStudies(locale), getCaseCategories(locale), getGlobal(locale)]);
   const industries = options(allCases.map((item) => ({ slug: item.industry ?? "", name: item.industry ?? "" })));
   const products = options(allCases.flatMap((item) => item.products ?? []));
   const scenarios = options(allCases.flatMap((item) => item.scenarios ?? []));
@@ -49,6 +50,7 @@ export default async function CasesPage({ params, searchParams }: { params: Prom
         locale={locale}
         variant="compact"
         motif="case"
+        backgroundImage={resolveListingBackground(global, "/cases")}
         eyebrow={locale === "zh" ? "客户案例" : "Customer cases"}
         title={locale === "zh" ? "经过现场验证的包装解决方案" : "Packaging solutions proven in the field"}
         description={locale === "zh" ? "了解不同行业如何借助艾美森提升保护、效率与交付体验。" : "See how teams across industries improve protection, efficiency, and delivery with Ameson."}

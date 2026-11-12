@@ -1,4 +1,4 @@
-import type { Media } from "@/types/content";
+import type { Global, Media } from "@/types/content";
 
 const strapiUrl = (
   process.env.NEXT_PUBLIC_STRAPI_MEDIA_URL ??
@@ -24,4 +24,16 @@ export function resolveStrapiAssetUrl(url?: string | null): string | null {
 
 export function resolveMediaUrl(media?: Media | null): string | null {
   return resolveStrapiAssetUrl(media?.url);
+}
+
+export function resolveListingBackground(global: Global | null | undefined, href: string): string | null {
+  const item = global?.navigation?.find((entry) => {
+    if (!entry.href) return false;
+    try {
+      return new URL(entry.href, "https://example.com").pathname.replace(/\/$/, "") === href;
+    } catch {
+      return false;
+    }
+  });
+  return resolveMediaUrl(item?.listingBackground);
 }

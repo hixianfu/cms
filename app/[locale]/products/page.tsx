@@ -1,11 +1,12 @@
 ﻿import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ListingEmptyState } from "@/components/listing/ListingEmptyState";
 import { ListingHero } from "@/components/listing/ListingHero";
 import { ListingPageShell, ListingSection } from "@/components/listing/ListingPageShell";
 import { ListingResultHeader } from "@/components/listing/ListingResultHeader";
 import { ListingSearchBar } from "@/components/listing/ListingSearchBar";
 import { ListingSidebar } from "@/components/listing/ListingSidebar";
+import { ListingPagination } from "@/components/listing/ListingPagination";
 import type { ListingSidebarItem } from "@/components/listing/ListingSidebar";
 import { ProductListingCard } from "@/components/products/ProductListingCard";
 import { categoryFilterQuery, findCategory, selectedCategorySlugs } from "@/lib/i18n/category-filter";
@@ -13,7 +14,9 @@ import { categoryLabel } from "@/lib/i18n/category-labels";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { localizedHref } from "@/lib/i18n/routing";
 import { createMetadata } from "@/lib/seo/metadata";
-import { getGlobal, getProductCategories, getProducts } from "@/lib/strapi/queries";
+import { resolveListingBackground } from "@/lib/strapi/image";
+import { getGlobal, getProductCategories, getProductPage } from "@/lib/strapi/queries";
+import { listingPageHref, parsePage } from "@/lib/listing-pagination";
 import type { ProductCategory } from "@/types/content";
 
 function categoryItems(items: ProductCategory[], locale: Locale, selected?: string): ListingSidebarItem[] {
@@ -44,14 +47,15 @@ export default async function ProductsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ category?: string; search?: string }>;
+  searchParams: Promise<{ category?: string; search?: string; page?: string }>;
 }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  const { category, search } = await searchParams;
+  const { category, search, page } = await searchParams;
+  const currentPage = parsePage(page);
   const searchTerm = search?.trim() ?? "";
-  const categories = await getProductCategories(locale);
+  const [global, categories] = await Promise.all([getGlobal(locale), getProductCategories(locale)]);
   const slugs = category ? selectedCategorySlugs(categories, category) : [];
   const filters = [
     slugs.length ? categoryFilterQuery(slugs) : "",
@@ -61,7 +65,10 @@ export default async function ProductsPage({
   ]
     .filter(Boolean)
     .join("&");
-  const products = await getProducts(locale, filters);
+  const { products, pagination } = await getProductPage(locale, filters, currentPage);
+  if (currentPage > Math.max(1, pagination.pageCount)) {
+    redirect(localizedHref(locale, listingPageHref("/products", Math.max(1, pagination.pageCount), { category, search: searchTerm })));
+  }
   const categoryName = category
     ? findCategory(categories, category)?.name
     : locale === "zh"
@@ -73,6 +80,7 @@ export default async function ProductsPage({
         locale={locale}
         variant="immersive"
         motif="product"
+        backgroundImage={resolveListingBackground(global, "/products")}
         eyebrow={locale === "zh" ? "产品目录" : "Product catalogue"}
         title={locale === "zh" ? "为真实业务打造的产品" : "Products built for the real world"}
         description={
@@ -124,7 +132,7 @@ export default async function ProductsPage({
                     ? "探索我们的产品"
                     : "Explore our solutions"
               }
-              count={products.length}
+              count={pagination.total}
               countLabel={locale === "zh" ? "个产品" : "products"}
             />
             {products.length ? (
@@ -163,6 +171,7 @@ export default async function ProductsPage({
                 }
               />
             )}
+            <ListingPagination locale={locale} path="/products" pagination={pagination} filters={{ category, search: searchTerm }} />
           </div>
         </div>
       </ListingSection>

@@ -38,4 +38,13 @@ describe("MegaMenu", () => {
     fireEvent.mouseEnter(screen.getByRole("link", { name: "Packaging knowledge" }));
     expect(screen.getByRole("link", { name: "Packaging guide" })).toHaveAttribute("href", "/en/blog/packaging-guide");
   });
+
+  it("renders string categories for videos and FAQs", () => {
+    render(<MegaMenu locale="zh" menu={{ kind: "content", path: "videos", items: [
+      { id: 4, title: "设备操作视频", slug: "machine-guide", category: "设备操作" },
+    ] }} />);
+    expect(screen.getByRole("link", { name: "设备操作" })).toHaveAttribute("href", "/zh/videos?category=%E8%AE%BE%E5%A4%87%E6%93%8D%E4%BD%9C");
+    fireEvent.mouseEnter(screen.getByRole("link", { name: "设备操作" }));
+    expect(screen.getByRole("link", { name: "设备操作视频" })).toHaveAttribute("href", "/zh/videos/machine-guide");
+  });
 });

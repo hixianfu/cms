@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Play } from "lucide-react";
 import type { Locale } from "@/lib/i18n/config";
-import type { Video } from "@/types/content";
+import type { ContentCategory, Video } from "@/types/content";
 import { localizedHref } from "@/lib/i18n/routing";
 import { resolveMediaUrl } from "@/lib/strapi/image";
 import { ListingMediaPlaceholder } from "@/components/listing/ListingMediaPlaceholder";
@@ -12,8 +12,11 @@ const labels = {
   en: { promotional: "Promotional", introduction: "Product introduction", operation: "Operation", installation: "Installation", tutorial: "Tutorial", commissioning: "Commissioning", maintenance: "Maintenance", application: "Industry application", factory: "Factory tour", company: "Company" },
 } as const;
 
-export const videoCategoryLabel = (category: string, locale: Locale) =>
-  (labels[locale === "zh" ? "zh" : "en"] as Record<string, string>)[category] ?? category;
+export const videoCategoryLabel = (category: ContentCategory | string | null | undefined, locale: Locale) => {
+  if (!category) return "";
+  if (typeof category !== "string") return category.name;
+  return (labels[locale === "zh" ? "zh" : "en"] as Record<string, string>)[category] ?? category;
+};
 
 export function VideoCard({ video, locale }: { video: Video; locale: Locale }) {
   const image = resolveMediaUrl(video.cover);

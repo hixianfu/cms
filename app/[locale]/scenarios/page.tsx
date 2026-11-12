@@ -4,6 +4,7 @@ import { MarketingListing } from "@/components/marketing/MarketingListing";
 import { isLocale } from "@/lib/i18n/config";
 import { createMetadata } from "@/lib/seo/metadata";
 import { getGlobal, getScenarioCategories, getScenarios } from "@/lib/strapi/queries";
+import { resolveListingBackground } from "@/lib/strapi/image";
 
 type Search = { q?: string; category?: string; industry?: string };
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> { const { locale } = await params; if (!isLocale(locale)) return {}; const global = await getGlobal(locale); return createMetadata(null, { title: locale === "zh" ? "应用场景" : "Application scenarios", description: global?.siteDescription ?? undefined }); }
@@ -12,6 +13,6 @@ export default async function ScenariosPage({ params, searchParams }: { params: 
   const { locale } = await params; if (!isLocale(locale)) notFound();
   const { q, category, industry } = await searchParams;
   const query = [q?.trim() ? `filters[title][$containsi]=${encodeURIComponent(q.trim())}` : "", category ? `filters[category][slug][$eq]=${encodeURIComponent(category)}` : "", industry ? `filters[industry][$eq]=${encodeURIComponent(industry)}` : ""].filter(Boolean).join("&");
-  const [items, allItems, categories] = await Promise.all([getScenarios(locale, query), getScenarios(locale), getScenarioCategories(locale)]);
-  return <MarketingListing locale={locale} kind="scenarios" items={items} allItems={allItems} categories={categories} q={q} category={category} industry={industry} />;
+  const [items, allItems, categories, global] = await Promise.all([getScenarios(locale, query), getScenarios(locale), getScenarioCategories(locale), getGlobal(locale)]);
+  return <MarketingListing locale={locale} kind="scenarios" items={items} allItems={allItems} categories={categories} q={q} category={category} industry={industry} backgroundImage={resolveListingBackground(global, "/scenarios")} />;
 }

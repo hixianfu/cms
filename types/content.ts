@@ -1,13 +1,17 @@
 export type Locale = "zh" | "en" | string;
 export type Media = { url: string; alternativeText?: string | null; width?: number; height?: number; mime?: string };
 export type Seo = { metaTitle?: string | null; metaDescription?: string | null; shareImage?: Media | null; canonicalUrl?: string | null };
-export type NavigationItem = { label: string; href: string; external?: boolean };
-export type HeaderContentItem = { id: number | string; title: string; slug: string; industry?: string | null; category?: ContentCategory | null };
+export type NavigationItem = { label: string; href: string; external?: boolean; listingBackground?: Media | null };
+export type HeaderContentItem = { id: number | string; title: string; slug: string; industry?: string | null; category?: ContentCategory | string | null };
 export type HeaderMegaMenuData = {
   solutions: HeaderContentItem[];
   scenarios: HeaderContentItem[];
   cases: HeaderContentItem[];
   articles: HeaderContentItem[];
+  videoCategories?: ContentCategory[];
+  faqCategories?: ContentCategory[];
+  videos?: HeaderContentItem[];
+  faqs?: HeaderContentItem[];
 };
 export type Global = { siteName: string; siteDescription?: string | null; favicon?: Media | null; logo?: Media | null; logoAlt?: string | null; defaultSeo?: Seo | null; navigation?: NavigationItem[]; footerText?: string | null; footerBusinessPhone?: string | null; footerProductPhone?: string | null; footerAfterSalesPhone?: string | null; footerWechat?: string | null; footerEmail?: string | null; footerQrCode?: Media | null; footerQrCodeAlt?: string | null; footerQrCodeLabel?: string | null; footerLinks?: NavigationItem[]; socialLinks?: NavigationItem[] };
 export type HeroSlide = { eyebrow?: string | null; title: string; description?: string | null; image?: Media | null; video?: Media | null; imageAlt?: string | null; href?: string | null; linkUrl?: string | null; ctaLabel?: string | null; linkLabel?: string | null };
@@ -21,8 +25,8 @@ export type Solution = { id: number | string; contentLocale?: Locale; title: str
 export type Scenario = { id: number | string; contentLocale?: Locale; title: string; slug: string; summary: string; category?: ContentCategory | null; industry?: string | null; content?: string | null; cover?: Media | null; products?: ContentReference[]; solutions?: ContentReference[]; cases?: ContentReference[]; videos?: ContentReference[]; articles?: ContentReference[]; sortOrder?: number; featured?: boolean; seo?: Seo | null };
 export type SearchResult = { kind: "product" | "solution" | "scenario" | "case" | "video" | "article" | "faq"; item: Product | Solution | Scenario | CaseStudy | Video | Article | Faq };
 export type CaseStudy = { id: number | string; contentLocale?: Locale; title: string; slug: string; summary: string; category?: ContentCategory | null; industry?: string | null; customerProblem?: string | null; originalPackaging?: string | null; solution?: string | null; results?: string | null; cover?: Media | null; gallery?: Media[]; products?: ContentReference[]; solutions?: ContentReference[]; scenarios?: ContentReference[]; videos?: ContentReference[]; articles?: ContentReference[]; sortOrder?: number; featured?: boolean; seo?: Seo | null };
-export type Video = { id: number | string; contentLocale?: Locale; title: string; slug: string; description?: string | null; category: string; cover?: Media | null; file?: Media | null; externalUrl?: string | null; products?: ContentReference[]; solutions?: ContentReference[]; scenarios?: ContentReference[]; cases?: ContentReference[]; articles?: ContentReference[]; sortOrder?: number; featured?: boolean; seo?: Seo | null };
-export type Faq = { id: number | string; contentLocale?: Locale; question: string; slug: string; answer: string; category: string; products?: ContentReference[]; solutions?: ContentReference[]; sortOrder?: number; featured?: boolean; seo?: Seo | null };
+export type Video = { id: number | string; contentLocale?: Locale; title: string; slug: string; description?: string | null; category?: ContentCategory | string | null; cover?: Media | null; file?: Media | null; externalUrl?: string | null; products?: ContentReference[]; solutions?: ContentReference[]; scenarios?: ContentReference[]; cases?: ContentReference[]; articles?: ContentReference[]; sortOrder?: number; featured?: boolean; seo?: Seo | null };
+export type Faq = { id: number | string; contentLocale?: Locale; question: string; slug: string; answer: string; category?: ContentCategory | string | null; products?: ContentReference[]; solutions?: ContentReference[]; sortOrder?: number; featured?: boolean; seo?: Seo | null };
 export type Article = { id: number | string; contentLocale?: Locale; title: string; slug: string; description?: string | null; cover?: Media | null; publishedAt?: string | null; author?: { name: string } | null; category?: ArticleCategory | null; products?: ContentReference[] | null; solutions?: ContentReference[] | null; scenarios?: ContentReference[] | null; cases?: ContentReference[] | null; videos?: ContentReference[] | null; faqs?: Faq[] | null; blocks?: unknown[]; seo?: Seo | null };
 export type Cta = { title: string; description?: string | null; label: string; url: string; image?: Media | null; imageAlt?: string | null };
 export type HomeFeatureCard = { id?: number | string; title: string; description?: string | null; image?: Media | null; targetType: "product" | "article" | "solution" | "scenario" | "case"; product?: ContentReference | null; article?: ContentReference | null; solution?: ContentReference | null; scenario?: ContentReference | null; case?: ContentReference | null };

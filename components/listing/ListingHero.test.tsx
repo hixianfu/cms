@@ -53,4 +53,25 @@ describe("ListingHero", () => {
       "true",
     );
   });
+
+  it("renders the configured background image with a contrast overlay", () => {
+    render(
+      <ListingHero
+        locale="zh"
+        variant="compact"
+        motif="product"
+        eyebrow="产品中心"
+        title="产品"
+        description="产品介绍"
+        backgroundImage="https://cdn.example.com/banner.jpg"
+      />,
+    );
+
+    expect(screen.getByTestId("listing-hero-background")).toHaveStyle({
+      backgroundImage: 'url("https://cdn.example.com/banner.jpg")',
+    });
+    expect(screen.getByTestId("listing-hero-background").nextElementSibling).toHaveClass(
+      "bg-brand-ink/65",
+    );
+  });
 });
